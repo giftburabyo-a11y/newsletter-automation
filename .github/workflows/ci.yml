@@ -24,34 +24,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Step 3: Install Google Chrome + matching ChromeDriver via chrome-for-testing
-      - name: Install Chrome and ChromeDriver
+      # Step 3: Install Google Chrome only (Selenium Manager handles ChromeDriver)
+      - name: Install Google Chrome
         run: |
-          # Install Chrome
           wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
-          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
-          echo "Chrome version: $CHROME_VERSION"
-
-          # Fetch matching ChromeDriver from the new Chrome for Testing endpoint
-          CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json" \
-            | python3 -c "
-          import sys, json
-          data = json.load(sys.stdin)
-          version = '$CHROME_VERSION'
-          for v in reversed(data['versions']):
-              if v['version'] == version:
-                  for dl in v['downloads'].get('chromedriver', []):
-                      if dl['platform'] == 'linux64':
-                          print(dl['url'])
-                          sys.exit(0)
-          ")
-          echo "ChromeDriver URL: $CHROMEDRIVER_URL"
-          wget -q "$CHROMEDRIVER_URL" -O chromedriver_linux64.zip
-          unzip -q chromedriver_linux64.zip
-          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
-          chromedriver --version
+          google-chrome --version
 
       # Step 4: Set up virtual display
       - name: Start Xvfb virtual display
@@ -60,14 +38,13 @@ jobs:
           Xvfb :99 -screen 0 1920x1080x24 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
 
-      # Step 5: Build and Run Tests
+      # Step 5: Run Tests (Selenium Manager auto-downloads matching ChromeDriver)
       - name: Run Tests
         env:
           DISPLAY: :99
         run: |
           mvn test \
             -Dheadless=true \
-            -Dwebdriver.chrome.driver=/usr/local/bin/chromedriver \
             -Djunit.jupiter.execution.parallel.enabled=false
 
       # Step 6: Upload Surefire reports
