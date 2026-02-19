@@ -125,23 +125,209 @@ jobs:
           echo "pass_list=$PASS_LIST" >> $GITHUB_OUTPUT
           echo "fail_list=$FAIL_LIST" >> $GITHUB_OUTPUT
 
+      - name: Send Email on success
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: ${{ secrets.MAIL_RECIPIENT }}
+          from: Newsletter CI <${{ secrets.MAIL_USERNAME }}>
+          subject: "✅ Newsletter Selenium Tests — PASSED | Run #${{ github.run_number }}"
+          html_body: |
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; background: #f9f9f9;">
+              <div style="background: #36a64f; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+                <h1 style="margin:0; font-size: 22px;">✅ Newsletter Selenium Tests — PASSED</h1>
+              </div>
+              <div style="background: white; padding: 20px; border: 1px solid #ddd;">
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px;">📋 Run Details</h3>
+                <table style="width:100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px; color: #666; width: 40%;"><strong>📁 Repository</strong></td>
+                    <td style="padding: 8px;">${{ github.repository }}</td>
+                  </tr>
+                  <tr style="background:#f9f9f9;">
+                    <td style="padding: 8px; color: #666;"><strong>🌿 Branch</strong></td>
+                    <td style="padding: 8px;">${{ github.ref_name }}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; color: #666;"><strong>👤 Triggered by</strong></td>
+                    <td style="padding: 8px;">${{ github.actor }}</td>
+                  </tr>
+                  <tr style="background:#f9f9f9;">
+                    <td style="padding: 8px; color: #666;"><strong>🔗 Run</strong></td>
+                    <td style="padding: 8px;">
+                      <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color: #36a64f;">
+                        View Run #${{ github.run_number }}
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">📊 Test Summary</h3>
+                <table style="width:100%; border-collapse: collapse; text-align: center;">
+                  <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; border: 1px solid #ddd;">📋 Total</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">✅ Passed</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">❌ Failed</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">⏭️ Skipped</th>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold;">${{ steps.test-results.outputs.total }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #36a64f;">${{ steps.test-results.outputs.passed }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #e01e5a;">${{ steps.test-results.outputs.failed }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #888;">${{ steps.test-results.outputs.skipped }}</td>
+                  </tr>
+                </table>
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">✅ Passed Tests</h3>
+                <p style="background: #f6ffed; border-left: 4px solid #36a64f; padding: 12px; white-space: pre-line; font-family: monospace;">${{ steps.test-results.outputs.pass_list }}</p>
+
+              </div>
+              <div style="background: #f0f0f0; padding: 12px; border-radius: 0 0 8px 8px; text-align: center; color: #888; font-size: 12px;">
+                🕒 ${{ github.event.head_commit.timestamp }} • Newsletter Automation CI
+              </div>
+            </body>
+            </html>
+
+      - name: Send Email on failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: ${{ secrets.MAIL_RECIPIENT }}
+          from: Newsletter CI <${{ secrets.MAIL_USERNAME }}>
+          subject: "❌ Newsletter Selenium Tests — FAILED | Run #${{ github.run_number }}"
+          html_body: |
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; background: #f9f9f9;">
+              <div style="background: #e01e5a; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+                <h1 style="margin:0; font-size: 22px;">❌ Newsletter Selenium Tests — FAILED</h1>
+              </div>
+              <div style="background: white; padding: 20px; border: 1px solid #ddd;">
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px;">📋 Run Details</h3>
+                <table style="width:100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px; color: #666; width: 40%;"><strong>📁 Repository</strong></td>
+                    <td style="padding: 8px;">${{ github.repository }}</td>
+                  </tr>
+                  <tr style="background:#f9f9f9;">
+                    <td style="padding: 8px; color: #666;"><strong>🌿 Branch</strong></td>
+                    <td style="padding: 8px;">${{ github.ref_name }}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; color: #666;"><strong>👤 Triggered by</strong></td>
+                    <td style="padding: 8px;">${{ github.actor }}</td>
+                  </tr>
+                  <tr style="background:#f9f9f9;">
+                    <td style="padding: 8px; color: #666;"><strong>🔗 Run</strong></td>
+                    <td style="padding: 8px;">
+                      <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color: #e01e5a;">
+                        View Run #${{ github.run_number }}
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">📊 Test Summary</h3>
+                <table style="width:100%; border-collapse: collapse; text-align: center;">
+                  <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; border: 1px solid #ddd;">📋 Total</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">✅ Passed</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">❌ Failed</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">⏭️ Skipped</th>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold;">${{ steps.test-results.outputs.total }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #36a64f;">${{ steps.test-results.outputs.passed }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #e01e5a;">${{ steps.test-results.outputs.failed }}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #888;">${{ steps.test-results.outputs.skipped }}</td>
+                  </tr>
+                </table>
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">✅ Passed Tests</h3>
+                <p style="background: #f6ffed; border-left: 4px solid #36a64f; padding: 12px; white-space: pre-line; font-family: monospace;">${{ steps.test-results.outputs.pass_list }}</p>
+
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">❌ Failed Tests</h3>
+                <p style="background: #fff0f3; border-left: 4px solid #e01e5a; padding: 12px; white-space: pre-line; font-family: monospace;">${{ steps.test-results.outputs.fail_list }}</p>
+
+              </div>
+              <div style="background: #f0f0f0; padding: 12px; border-radius: 0 0 8px 8px; text-align: center; color: #888; font-size: 12px;">
+                🕒 ${{ github.event.head_commit.timestamp }} • Newsletter Automation CI
+              </div>
+            </body>
+            </html>
+
       - name: Notify Slack on success
         if: success()
         uses: slackapi/slack-github-action@v1.26.0
         with:
           payload: |
             {
-              "text": "*Newsletter Selenium Tests — PASSED ✅*",
-              "attachments": [
+              "blocks": [
                 {
-                  "color": "#36a64f",
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✅ Newsletter Selenium Tests — PASSED"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
                   "fields": [
-                    { "title": "Repository",   "value": "${{ github.repository }}", "short": true },
-                    { "title": "Branch",       "value": "${{ github.ref_name }}",   "short": true },
-                    { "title": "Triggered by", "value": "${{ github.actor }}",      "short": true },
-                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true },
-                    { "title": "Results",      "value": "✅ ${{ steps.test-results.outputs.passed }} Passed  ❌ ${{ steps.test-results.outputs.failed }} Failed  ⏭️ ${{ steps.test-results.outputs.skipped }} Skipped  📋 ${{ steps.test-results.outputs.total }} Total", "short": false },
-                    { "title": "Passed Tests", "value": "${{ steps.test-results.outputs.pass_list }}", "short": false }
+                    { "type": "mrkdwn", "text": "*📁 Repository*\n${{ github.repository }}" },
+                    { "type": "mrkdwn", "text": "*🌿 Branch*\n${{ github.ref_name }}" },
+                    { "type": "mrkdwn", "text": "*👤 Triggered by*\n${{ github.actor }}" },
+                    { "type": "mrkdwn", "text": "*🔗 Run*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>" }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": { "type": "mrkdwn", "text": "*📊 Test Summary*" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*📋 Total*\n${{ steps.test-results.outputs.total }}" },
+                    { "type": "mrkdwn", "text": "*✅ Passed*\n${{ steps.test-results.outputs.passed }}" },
+                    { "type": "mrkdwn", "text": "*❌ Failed*\n${{ steps.test-results.outputs.failed }}" },
+                    { "type": "mrkdwn", "text": "*⏭️ Skipped*\n${{ steps.test-results.outputs.skipped }}" }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*✅ Passed Tests*\n${{ steps.test-results.outputs.pass_list }}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "🕒 Completed at ${{ github.event.head_commit.timestamp }} • Newsletter Automation CI"
+                    }
                   ]
                 }
               ]
@@ -156,18 +342,69 @@ jobs:
         with:
           payload: |
             {
-              "text": "*Newsletter Selenium Tests — FAILED ❌*",
-              "attachments": [
+              "blocks": [
                 {
-                  "color": "#e01e5a",
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ Newsletter Selenium Tests — FAILED"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
                   "fields": [
-                    { "title": "Repository",   "value": "${{ github.repository }}", "short": true },
-                    { "title": "Branch",       "value": "${{ github.ref_name }}",   "short": true },
-                    { "title": "Triggered by", "value": "${{ github.actor }}",      "short": true },
-                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true },
-                    { "title": "Results",      "value": "✅ ${{ steps.test-results.outputs.passed }} Passed  ❌ ${{ steps.test-results.outputs.failed }} Failed  ⏭️ ${{ steps.test-results.outputs.skipped }} Skipped  📋 ${{ steps.test-results.outputs.total }} Total", "short": false },
-                    { "title": "Passed Tests", "value": "${{ steps.test-results.outputs.pass_list }}", "short": false },
-                    { "title": "Failed Tests", "value": "${{ steps.test-results.outputs.fail_list }}", "short": false }
+                    { "type": "mrkdwn", "text": "*📁 Repository*\n${{ github.repository }}" },
+                    { "type": "mrkdwn", "text": "*🌿 Branch*\n${{ github.ref_name }}" },
+                    { "type": "mrkdwn", "text": "*👤 Triggered by*\n${{ github.actor }}" },
+                    { "type": "mrkdwn", "text": "*🔗 Run*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>" }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": { "type": "mrkdwn", "text": "*📊 Test Summary*" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*📋 Total*\n${{ steps.test-results.outputs.total }}" },
+                    { "type": "mrkdwn", "text": "*✅ Passed*\n${{ steps.test-results.outputs.passed }}" },
+                    { "type": "mrkdwn", "text": "*❌ Failed*\n${{ steps.test-results.outputs.failed }}" },
+                    { "type": "mrkdwn", "text": "*⏭️ Skipped*\n${{ steps.test-results.outputs.skipped }}" }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*✅ Passed Tests*\n${{ steps.test-results.outputs.pass_list }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*❌ Failed Tests*\n${{ steps.test-results.outputs.fail_list }}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "🕒 Completed at ${{ github.event.head_commit.timestamp }} • Newsletter Automation CI"
+                    }
                   ]
                 }
               ]
