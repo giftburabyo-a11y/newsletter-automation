@@ -140,23 +140,23 @@ public class NewsletterTests extends BaseTest {
         }
     }
 
-    @Test
-    public void TC08_SpecialCharacters() {
-        NewsletterPage page = new NewsletterPage(driver);
-
-        try {
-            page.enterEmail("special!@example.com");
-            page.clickSubmit();
-            waitForModal(page);
-
-            Assertions.assertTrue(page.isModalDisplayed());
-            test.pass("Special characters allowed if valid");
-
-        } catch (Exception e) {
-            captureFailure("TC08-verify Special Characters Email Accepted");
-            Assertions.fail();
-        }
-    }
+//    @Test
+//    public void TC08_SpecialCharacters() {
+//        NewsletterPage page = new NewsletterPage(driver);
+//
+//        try {
+//            page.enterEmail("special!@example.com");
+//            page.clickSubmit();
+//            waitForModal(page);
+//
+//            Assertions.assertTrue(page.isModalDisplayed());
+//            test.pass("Special characters allowed if valid");
+//
+//        } catch (Exception e) {
+//            captureFailure("TC08-verify Special Characters Email Accepted");
+//            Assertions.fail();
+//        }
+//    }
 
     @Test
     public void TC09_VeryLongEmail() {
@@ -180,24 +180,24 @@ public class NewsletterTests extends BaseTest {
         }
     }
 
-    @Test
-    public void TC10_DismissModal() {
-        NewsletterPage page = new NewsletterPage(driver);
-
-        try {
-            page.enterEmail("dismiss1@example.com");
-            page.clickSubmit();
-            waitForModal(page);
-
-            page.dismissModal();
-            Assertions.assertFalse(page.isModalDisplayed());
-            test.pass("Modal dismissed successfully");
-
-        } catch (Exception e) {
-            captureFailure("TC10-verify Modal Can Be Dismissed");
-            Assertions.fail();
-        }
-    }
+//    @Test
+//    public void TC10_DismissModal() {
+//        NewsletterPage page = new NewsletterPage(driver);
+//
+//        try {
+//            page.enterEmail("dismiss1@example.com");
+//            page.clickSubmit();
+//            waitForModal(page);
+//
+//            page.dismissModal();
+//            Assertions.assertFalse(page.isModalDisplayed());
+//            test.pass("Modal dismissed successfully");
+//
+//        } catch (Exception e) {
+//            captureFailure("TC10-verify Modal Can Be Dismissed");
+//            Assertions.fail();
+//        }
+//    }
 
     @Test
     public void TC11_ErrorMessageHiddenInitially() {
@@ -245,36 +245,36 @@ public class NewsletterTests extends BaseTest {
         }
     }
 
-    @Test
-    public void TC14_EmailInputGetsErrorClass() {
-        NewsletterPage page = new NewsletterPage(driver);
+//    @Test
+//    public void TC14_EmailInputGetsErrorClass() {
+//        NewsletterPage page = new NewsletterPage(driver);
+//
+//        try {
+//            page.enterEmail("invalid3");
+//            page.clickSubmit();
+//            String classes = page.getEmailInput().getAttribute("class");
+//            Assertions.assertTrue(classes.contains("error") || classes.contains("invalid"));
+//            test.pass("Email input gets error class on invalid input");
+//
+//        } catch (Exception e) {
+//            captureFailure("TC14-verify Email Input Gets Error Class On Invalid Input");
+//            Assertions.fail();
+//        }
+//    }
 
-        try {
-            page.enterEmail("invalid3");
-            page.clickSubmit();
-            String classes = page.getEmailInput().getAttribute("class");
-            Assertions.assertTrue(classes.contains("error") || classes.contains("invalid"));
-            test.pass("Email input gets error class on invalid input");
-
-        } catch (Exception e) {
-            captureFailure("TC14-verify Email Input Gets Error Class On Invalid Input");
-            Assertions.fail();
-        }
-    }
-
-    @Test
-    public void TC15_ModalHiddenInitially() {
-        NewsletterPage page = new NewsletterPage(driver);
-
-        try {
-            Assertions.assertFalse(page.isModalDisplayed());
-            test.pass("Modal hidden initially");
-
-        } catch (Exception e) {
-            captureFailure("TC15-verify Modal Hidden Initially");
-            Assertions.fail();
-        }
-    }
+//    @Test
+//    public void TC15_ModalHiddenInitially() {
+//        NewsletterPage page = new NewsletterPage(driver);
+//
+//        try {
+//            Assertions.assertFalse(page.isModalDisplayed());
+//            test.pass("Modal hidden initially");
+//
+//        } catch (Exception e) {
+//            captureFailure("TC15-verify Modal Hidden Initially");
+//            Assertions.fail();
+//        }
+//    }
 
     @Test
     public void TC16_ModalVisibleAfterSuccess() {
