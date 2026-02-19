@@ -85,13 +85,58 @@ jobs:
             screenshots/
           retention-days: 7
 
+      - name: Parse Test Results
+        if: always()
+        id: test-results
+        run: |
+          TESTS=$(grep -h 'tests="' target/surefire-reports/*.xml | grep -oP 'tests="\K[0-9]+' | awk '{s+=$1} END {print s}')
+          FAILURES=$(grep -h 'failures="' target/surefire-reports/*.xml | grep -oP 'failures="\K[0-9]+' | awk '{s+=$1} END {print s}')
+          ERRORS=$(grep -h 'errors="' target/surefire-reports/*.xml | grep -oP 'errors="\K[0-9]+' | awk '{s+=$1} END {print s}')
+          SKIPPED=$(grep -h 'skipped="' target/surefire-reports/*.xml | grep -oP 'skipped="\K[0-9]+' | awk '{s+=$1} END {print s}')
+          PASSED=$((TESTS - FAILURES - ERRORS - SKIPPED))
+
+          echo "total=$TESTS" >> $GITHUB_OUTPUT
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILURES" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+
+          PASS_LIST=$(python3 -c "
+          import xml.etree.ElementTree as ET, glob
+          results = []
+          for f in glob.glob('target/surefire-reports/*.xml'):
+              tree = ET.parse(f)
+              for tc in tree.findall('testcase'):
+                  if tc.find('failure') is None and tc.find('error') is None:
+                      results.append('✅ ' + tc.get('name'))
+          print('\n'.join(results))
+          ")
+
+          FAIL_LIST=$(python3 -c "
+          import xml.etree.ElementTree as ET, glob
+          results = []
+          for f in glob.glob('target/surefire-reports/*.xml'):
+              tree = ET.parse(f)
+              for tc in tree.findall('testcase'):
+                  if tc.find('failure') is not None or tc.find('error') is not None:
+                      results.append('❌ ' + tc.get('name'))
+          print('\n'.join(results))
+          ")
+
+          echo "pass_list<<EOF" >> $GITHUB_OUTPUT
+          echo "$PASS_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "fail_list<<EOF" >> $GITHUB_OUTPUT
+          echo "$FAIL_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Notify Slack on success
         if: success()
         uses: slackapi/slack-github-action@v1.26.0
         with:
           payload: |
             {
-              "text": "*Newsletter Selenium Tests — PASSED*",
+              "text": "*Newsletter Selenium Tests — PASSED ✅*",
               "attachments": [
                 {
                   "color": "#36a64f",
@@ -99,7 +144,9 @@ jobs:
                     { "title": "Repository",   "value": "${{ github.repository }}", "short": true },
                     { "title": "Branch",       "value": "${{ github.ref_name }}",   "short": true },
                     { "title": "Triggered by", "value": "${{ github.actor }}",      "short": true },
-                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true }
+                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true },
+                    { "title": "Results",      "value": "✅ ${{ steps.test-results.outputs.passed }} Passed  ❌ ${{ steps.test-results.outputs.failed }} Failed  ⏭️ ${{ steps.test-results.outputs.skipped }} Skipped  📋 ${{ steps.test-results.outputs.total }} Total", "short": false },
+                    { "title": "Passed Tests", "value": "${{ steps.test-results.outputs.pass_list }}", "short": false }
                   ]
                 }
               ]
@@ -114,7 +161,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "*Newsletter Selenium Tests — FAILED*",
+              "text": "*Newsletter Selenium Tests — FAILED ❌*",
               "attachments": [
                 {
                   "color": "#e01e5a",
@@ -122,7 +169,10 @@ jobs:
                     { "title": "Repository",   "value": "${{ github.repository }}", "short": true },
                     { "title": "Branch",       "value": "${{ github.ref_name }}",   "short": true },
                     { "title": "Triggered by", "value": "${{ github.actor }}",      "short": true },
-                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true }
+                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true },
+                    { "title": "Results",      "value": "✅ ${{ steps.test-results.outputs.passed }} Passed  ❌ ${{ steps.test-results.outputs.failed }} Failed  ⏭️ ${{ steps.test-results.outputs.skipped }} Skipped  📋 ${{ steps.test-results.outputs.total }} Total", "short": false },
+                    { "title": "Passed Tests", "value": "${{ steps.test-results.outputs.pass_list }}", "short": false },
+                    { "title": "Failed Tests", "value": "${{ steps.test-results.outputs.fail_list }}", "short": false }
                   ]
                 }
               ]
@@ -130,3 +180,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Fail build on test failures
+        if: steps.run-tests.outcome == 'failure'
+        run: exit 1
