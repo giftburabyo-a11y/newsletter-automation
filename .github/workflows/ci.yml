@@ -24,9 +24,57 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # Step 3: Install Google Chrome
+      - name: Install Google Chrome
+        run: |
+          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+          google-chrome --version
 
+      # Step 4: Install ChromeDriver matching installed Chrome version
+      - name: Install ChromeDriver
+        run: |
+          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%%.*}")
+          wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+          chromedriver --version
 
-      # Step 4: Build and Run Tests
+      # Step 5: Set up virtual display (Xvfb) for non-headless fallback
+      - name: Start Xvfb virtual display
+        run: |
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1920x1080x24 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+
+      # Step 6: Build and Run Tests with headless Chrome flags
       - name: Run Tests
-        run: mvn test
+        env:
+          DISPLAY: :99
+        run: |
+          mvn test \
+            -Dheadless=true \
+            -Dwebdriver.chrome.driver=/usr/local/bin/chromedriver \
+            -Djunit.jupiter.execution.parallel.enabled=false
 
+      # Step 7: Upload Surefire (JUnit) test reports on failure
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
+
+      # Step 8: Upload ExtentReports / screenshots on failure
+      - name: Upload Test Artifacts (Screenshots & HTML Report)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: |
+            test-output/
+            screenshots/
+          retention-days: 7
