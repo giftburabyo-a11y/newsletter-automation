@@ -131,10 +131,10 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          to: ${{ secrets.MAIL_RECIPIENT }}
-          from: Newsletter CI <${{ secrets.MAIL_USERNAME }}>
+          username: ${{ secrets.GMAIL_ADRESS }}
+          password: ${{ secrets.GMAIL_APP_PASS }}
+          to: ${{ secrets.REPORT_EMAIL }}
+          from: Newsletter CI <${{ secrets.GMAIL_ADRESS }}>
           subject: "✅ Newsletter Selenium Tests — PASSED | Run #${{ github.run_number }}"
           html_body: |
             <html>
@@ -200,10 +200,10 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          to: ${{ secrets.MAIL_RECIPIENT }}
-          from: Newsletter CI <${{ secrets.MAIL_USERNAME }}>
+          username: ${{ secrets.GMAIL_ADRESS }}
+          password: ${{ secrets.GMAIL_APP_PASS }}
+          to: ${{ secrets.REPORT_EMAIL }}
+          from: Newsletter CI <${{ secrets.GMAIL_ADRESS }}>
           subject: "❌ Newsletter Selenium Tests — FAILED | Run #${{ github.run_number }}"
           html_body: |
             <html>
