@@ -103,32 +103,27 @@ jobs:
           PASS_LIST=$(python3 -c "
           import xml.etree.ElementTree as ET, glob
           results = []
-          for f in glob.glob('target/surefire-reports/*.xml'):
+          for f in sorted(glob.glob('target/surefire-reports/*.xml')):
               tree = ET.parse(f)
               for tc in tree.findall('testcase'):
                   if tc.find('failure') is None and tc.find('error') is None:
                       results.append('✅ ' + tc.get('name'))
           print('\n'.join(results))
-          ")
+          " | tr '\n' '|' | sed 's/|/\\n/g' | sed 's/\\n$//')
 
           FAIL_LIST=$(python3 -c "
           import xml.etree.ElementTree as ET, glob
           results = []
-          for f in glob.glob('target/surefire-reports/*.xml'):
+          for f in sorted(glob.glob('target/surefire-reports/*.xml')):
               tree = ET.parse(f)
               for tc in tree.findall('testcase'):
                   if tc.find('failure') is not None or tc.find('error') is not None:
                       results.append('❌ ' + tc.get('name'))
           print('\n'.join(results))
-          ")
+          " | tr '\n' '|' | sed 's/|/\\n/g' | sed 's/\\n$//')
 
-          echo "pass_list<<EOF" >> $GITHUB_OUTPUT
-          echo "$PASS_LIST" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "fail_list<<EOF" >> $GITHUB_OUTPUT
-          echo "$FAIL_LIST" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "pass_list=$PASS_LIST" >> $GITHUB_OUTPUT
+          echo "fail_list=$FAIL_LIST" >> $GITHUB_OUTPUT
 
       - name: Notify Slack on success
         if: success()
