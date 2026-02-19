@@ -4,13 +4,12 @@ import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.newsletter.utils.ExtentManager;
 import com.newsletter.utils.ScreenshotUtil;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.time.Duration;
 
@@ -26,8 +25,36 @@ public class BaseTest {
         extent = ExtentManager.getInstance();
         test = extent.createTest(testInfo.getDisplayName());
 
-        WebDriverManager.chromedriver().setup();
-        driver = new ChromeDriver();
+        ChromeOptions options = new ChromeOptions();
+
+        boolean isCI = Boolean.parseBoolean(System.getProperty("headless", "false"))
+                || System.getenv("CI") != null;
+
+        if (isCI) {
+            options.addArguments(
+                    "--headless=new",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--window-size=1920,1080",
+                    "--remote-debugging-port=0"
+            );
+        }
+
+        // If CI pipeline sets webdriver.chrome.driver, use it.
+        // Otherwise Selenium Manager (4.6+) handles it automatically.
+        String driverPath = System.getProperty("webdriver.chrome.driver");
+        if (driverPath != null && !driverPath.isEmpty()) {
+            System.setProperty("webdriver.chrome.driver", driverPath);
+        }
+
+        // If CI pipeline sets a custom Chrome binary (chrome-for-testing)
+        String chromeBinary = System.getProperty("webdriver.chrome.binary");
+        if (chromeBinary != null && !chromeBinary.isEmpty()) {
+            options.setBinary(chromeBinary);
+        }
+
+        driver = new ChromeDriver(options);
 
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.manage().window().maximize();
@@ -37,11 +64,9 @@ public class BaseTest {
 
     @AfterEach
     public void tearDown(TestInfo testInfo) {
-
         if (driver != null) {
             driver.quit();
         }
-
         extent.flush();
     }
 
@@ -50,4 +75,3 @@ public class BaseTest {
         test.fail("Test Failed").addScreenCaptureFromPath(path);
     }
 }
-

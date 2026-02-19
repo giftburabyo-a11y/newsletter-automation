@@ -12,11 +12,9 @@ jobs:
 
     steps:
 
-      # Step 1: Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java 17
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -24,30 +22,43 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Step 3: Install Google Chrome only (Selenium Manager handles ChromeDriver)
-      - name: Install Google Chrome
+      - name: Install Chrome and ChromeDriver (chrome-for-testing)
         run: |
-          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
-          google-chrome --version
+          STABLE_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['channels']['Stable']['version'])")
+          echo "Installing Chrome for Testing: $STABLE_VERSION"
 
-      # Step 4: Set up virtual display
+          BASE_URL="https://storage.googleapis.com/chrome-for-testing-public/${STABLE_VERSION}/linux64"
+
+          wget -q "${BASE_URL}/chrome-linux64.zip" -O chrome.zip
+          wget -q "${BASE_URL}/chromedriver-linux64.zip" -O chromedriver.zip
+
+          unzip -q chrome.zip
+          unzip -q chromedriver.zip
+
+          sudo mv chrome-linux64/chrome /usr/local/bin/google-chrome-cft
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/google-chrome-cft /usr/local/bin/chromedriver
+
+          chromedriver --version
+          /usr/local/bin/google-chrome-cft --version
+
       - name: Start Xvfb virtual display
         run: |
           sudo apt-get install -y xvfb
           Xvfb :99 -screen 0 1920x1080x24 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
 
-      # Step 5: Run Tests (Selenium Manager auto-downloads matching ChromeDriver)
       - name: Run Tests
         env:
           DISPLAY: :99
         run: |
           mvn test \
             -Dheadless=true \
+            -Dwebdriver.chrome.driver=/usr/local/bin/chromedriver \
+            -Dwebdriver.chrome.binary=/usr/local/bin/google-chrome-cft \
             -Djunit.jupiter.execution.parallel.enabled=false
 
-      # Step 6: Upload Surefire reports
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,7 +67,6 @@ jobs:
           path: target/surefire-reports/
           retention-days: 7
 
-      # Step 7: Upload screenshots and HTML report
       - name: Upload Test Artifacts
         if: always()
         uses: actions/upload-artifact@v4
