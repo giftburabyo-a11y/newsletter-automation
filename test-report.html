@@ -35,7 +35,7 @@
 <a href="#"><span class="badge badge-primary"></span></a>
 </li>
 <li class="m-r-10">
-<a href="#"><span class="badge badge-primary">Feb 19, 2026 10:03:52 am</span></a>
+<a href="#"><span class="badge badge-primary">Feb 19, 2026 12:15:20 pm</span></a>
 </li>
 </ul>
 </div>
@@ -67,6 +67,7 @@
 <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-exclamation-circle"></i></a>
 <ul id="status-toggle" class="dropdown-menu dropdown-md p-v-0">
 <a class="dropdown-item" status="pass" href="#"><span>Pass</span><span class="status success"></span></a>
+<a class="dropdown-item" status="fail" href="#"><span>Fail</span><span class="status danger"></span></a>
 <div class="dropdown-divider"></div>
 <a status="clear" class="dropdown-item" href="#"><span>Clear</span><span class="pull-right"><i class="fa fa-close"></i></span></a>
 </ul>
@@ -79,9 +80,36 @@
           tag=""
           device="">
           <div class="test-detail">
+            <p class="name">TC14_EmailInputGetsErrorClass()</p>
+            <p class="text-sm">
+              <span>12:15:20</span> / <span>00:00:00:000</span>
+              <span class="badge pass-bg log float-right">Pass</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-pass">TC14_EmailInputGetsErrorClass()</h5>
+<span class='badge badge-success'>02.19.2026 12:15:20</span>
+<span class='badge badge-danger'>02.19.2026 12:15:20</span>
+<span class='badge badge-default'>00:00:00:000</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=1</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+</div>
+</div>          </div>
+        </li>
+        <li class="test-item"  status="pass" test-id="2"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
             <p class="name">TC05_EmailWithUppercase()</p>
             <p class="text-sm">
-              <span>10:03:52</span> / <span>00:00:07:029</span>
+              <span>12:15:29</span> / <span>00:00:03:277</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -90,50 +118,9 @@
 <div class="p-v-10">
 <div class="info">
 <h5 class="test-status text-pass">TC05_EmailWithUppercase()</h5>
-<span class='badge badge-success'>02.19.2026 10:03:52</span>
-<span class='badge badge-danger'>02.19.2026 10:03:59</span>
-<span class='badge badge-default'>00:00:07:029</span>
-&middot; <span class='uri-anchor badge badge-default'>#test-id=1</span>
-<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
-<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
-<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
-</div>
-</div>
-</div><div class="detail-body mt-4">
-<table class="table table-sm">
-  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
-  <tbody>
-      <tr class="event-row">
-        <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:03:59</td>
-        <td>
-          Uppercase email accepted
-        </td>
-      </tr>
-  </tbody>
-</table>
-</div>
-          </div>
-        </li>
-        <li class="test-item"  status="pass" test-id="2"
-          author=""
-          tag=""
-          device="">
-          <div class="test-detail">
-            <p class="name">TC02_InvalidEmail_NoAtSymbol()</p>
-            <p class="text-sm">
-              <span>10:04:00</span> / <span>00:00:05:274</span>
-              <span class="badge pass-bg log float-right">Pass</span>
-            </p>
-          </div>
-          <div class="test-contents d-none">
-<div class="detail-head">
-<div class="p-v-10">
-<div class="info">
-<h5 class="test-status text-pass">TC02_InvalidEmail_NoAtSymbol()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:00</span>
-<span class='badge badge-danger'>02.19.2026 10:04:06</span>
-<span class='badge badge-default'>00:00:05:274</span>
+<span class='badge badge-success'>02.19.2026 12:15:29</span>
+<span class='badge badge-danger'>02.19.2026 12:15:33</span>
+<span class='badge badge-default'>00:00:03:277</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=2</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -146,9 +133,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:06</td>
+        <td>12:15:33</td>
         <td>
-          Error displayed correctly
+          Uppercase email accepted
         </td>
       </tr>
   </tbody>
@@ -156,40 +143,44 @@
 </div>
           </div>
         </li>
-        <li class="test-item"  status="pass" test-id="3"
+        <li class="test-item"  status="fail" test-id="3"
           author=""
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC07_NoDomain()</p>
+            <p class="name">TC15_ModalHiddenInitially()</p>
             <p class="text-sm">
-              <span>10:04:06</span> / <span>00:00:04:615</span>
-              <span class="badge pass-bg log float-right">Pass</span>
+              <span>12:15:33</span> / <span>00:00:13:771</span>
+              <span class="badge fail-bg log float-right">Fail</span>
             </p>
           </div>
           <div class="test-contents d-none">
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC07_NoDomain()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:06</span>
-<span class='badge badge-danger'>02.19.2026 10:04:11</span>
-<span class='badge badge-default'>00:00:04:615</span>
+<h5 class="test-status text-fail">TC15_ModalHiddenInitially()</h5>
+<span class='badge badge-success'>02.19.2026 12:15:33</span>
+<span class='badge badge-danger'>02.19.2026 12:15:47</span>
+<span class='badge badge-default'>00:00:13:771</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=3</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
 <span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
 </div>
 </div>
-</div><div class="detail-body mt-4">
+</div>    <div class="row mb-3"><div class="col-md-3">
+<img data-featherlight='screenshots/TC15-verify Modal Hidden Initially_1771496147062.png' src="screenshots/TC15-verify Modal Hidden Initially_1771496147062.png">
+    
+    </div></div>
+<div class="detail-body mt-4">
 <table class="table table-sm">
   <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
   <tbody>
       <tr class="event-row">
-        <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:11</td>
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>12:15:47</td>
         <td>
-          Missing domain rejected
+          Test Failed
         </td>
       </tr>
   </tbody>
@@ -197,40 +188,44 @@
 </div>
           </div>
         </li>
-        <li class="test-item"  status="pass" test-id="4"
+        <li class="test-item"  status="fail" test-id="4"
           author=""
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC06_MultipleAtSymbols()</p>
+            <p class="name">TC10_DismissModal()</p>
             <p class="text-sm">
-              <span>10:04:12</span> / <span>00:00:04:385</span>
-              <span class="badge pass-bg log float-right">Pass</span>
+              <span>12:15:47</span> / <span>00:00:13:826</span>
+              <span class="badge fail-bg log float-right">Fail</span>
             </p>
           </div>
           <div class="test-contents d-none">
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC06_MultipleAtSymbols()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:12</span>
-<span class='badge badge-danger'>02.19.2026 10:04:16</span>
-<span class='badge badge-default'>00:00:04:385</span>
+<h5 class="test-status text-fail">TC10_DismissModal()</h5>
+<span class='badge badge-success'>02.19.2026 12:15:47</span>
+<span class='badge badge-danger'>02.19.2026 12:16:01</span>
+<span class='badge badge-default'>00:00:13:826</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=4</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
 <span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
 </div>
 </div>
-</div><div class="detail-body mt-4">
+</div>    <div class="row mb-3"><div class="col-md-3">
+<img data-featherlight='screenshots/TC10-verify Modal Can Be Dismissed_1771496161095.png' src="screenshots/TC10-verify Modal Can Be Dismissed_1771496161095.png">
+    
+    </div></div>
+<div class="detail-body mt-4">
 <table class="table table-sm">
   <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
   <tbody>
       <tr class="event-row">
-        <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:16</td>
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>12:16:01</td>
         <td>
-          Multiple @ rejected
+          Test Failed
         </td>
       </tr>
   </tbody>
@@ -243,9 +238,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC18_PageRefreshResetsForm()</p>
+            <p class="name">TC02_InvalidEmail_NoAtSymbol()</p>
             <p class="text-sm">
-              <span>10:04:17</span> / <span>00:00:04:239</span>
+              <span>12:16:01</span> / <span>00:00:03:733</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -253,10 +248,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC18_PageRefreshResetsForm()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:17</span>
-<span class='badge badge-danger'>02.19.2026 10:04:21</span>
-<span class='badge badge-default'>00:00:04:239</span>
+<h5 class="test-status text-pass">TC02_InvalidEmail_NoAtSymbol()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:01</span>
+<span class='badge badge-danger'>02.19.2026 12:16:05</span>
+<span class='badge badge-default'>00:00:03:733</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=5</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -269,9 +264,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:21</td>
+        <td>12:16:05</td>
         <td>
-          Page refresh resets form
+          Error displayed correctly
         </td>
       </tr>
   </tbody>
@@ -279,40 +274,44 @@
 </div>
           </div>
         </li>
-        <li class="test-item"  status="pass" test-id="6"
+        <li class="test-item"  status="fail" test-id="6"
           author=""
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC16_ModalVisibleAfterSuccess()</p>
+            <p class="name">TC08_SpecialCharacters()</p>
             <p class="text-sm">
-              <span>10:04:21</span> / <span>00:00:03:887</span>
-              <span class="badge pass-bg log float-right">Pass</span>
+              <span>12:16:05</span> / <span>00:00:08:926</span>
+              <span class="badge fail-bg log float-right">Fail</span>
             </p>
           </div>
           <div class="test-contents d-none">
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC16_ModalVisibleAfterSuccess()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:21</span>
-<span class='badge badge-danger'>02.19.2026 10:04:25</span>
-<span class='badge badge-default'>00:00:03:887</span>
+<h5 class="test-status text-fail">TC08_SpecialCharacters()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:05</span>
+<span class='badge badge-danger'>02.19.2026 12:16:14</span>
+<span class='badge badge-default'>00:00:08:926</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=6</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
 <span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
 </div>
 </div>
-</div><div class="detail-body mt-4">
+</div>    <div class="row mb-3"><div class="col-md-3">
+<img data-featherlight='screenshots/TC08-verify Special Characters Email Accepted_1771496174197.png' src="screenshots/TC08-verify Special Characters Email Accepted_1771496174197.png">
+    
+    </div></div>
+<div class="detail-body mt-4">
 <table class="table table-sm">
   <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
   <tbody>
       <tr class="event-row">
-        <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:25</td>
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>12:16:14</td>
         <td>
-          Modal appears after successful submission
+          Test Failed
         </td>
       </tr>
   </tbody>
@@ -325,9 +324,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC12_ErrorMessageVisibleWhenInvalid()</p>
+            <p class="name">TC07_NoDomain()</p>
             <p class="text-sm">
-              <span>10:04:26</span> / <span>00:00:04:177</span>
+              <span>12:16:14</span> / <span>00:00:04:531</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -335,10 +334,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC12_ErrorMessageVisibleWhenInvalid()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:26</span>
-<span class='badge badge-danger'>02.19.2026 10:04:30</span>
-<span class='badge badge-default'>00:00:04:177</span>
+<h5 class="test-status text-pass">TC07_NoDomain()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:14</span>
+<span class='badge badge-danger'>02.19.2026 12:16:18</span>
+<span class='badge badge-default'>00:00:04:531</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=7</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -351,9 +350,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:30</td>
+        <td>12:16:18</td>
         <td>
-          Error message visible on invalid email
+          Missing domain rejected
         </td>
       </tr>
   </tbody>
@@ -366,9 +365,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC11_ErrorMessageHiddenInitially()</p>
+            <p class="name">TC06_MultipleAtSymbols()</p>
             <p class="text-sm">
-              <span>10:04:30</span> / <span>00:00:03:482</span>
+              <span>12:16:19</span> / <span>00:00:03:332</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -376,10 +375,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC11_ErrorMessageHiddenInitially()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:30</span>
-<span class='badge badge-danger'>02.19.2026 10:04:34</span>
-<span class='badge badge-default'>00:00:03:482</span>
+<h5 class="test-status text-pass">TC06_MultipleAtSymbols()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:19</span>
+<span class='badge badge-danger'>02.19.2026 12:16:22</span>
+<span class='badge badge-default'>00:00:03:332</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=8</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -392,9 +391,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:34</td>
+        <td>12:16:22</td>
         <td>
-          Error message hidden initially
+          Multiple @ rejected
         </td>
       </tr>
   </tbody>
@@ -407,9 +406,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC17_SubmitUsingEnterKey()</p>
+            <p class="name">TC18_PageRefreshResetsForm()</p>
             <p class="text-sm">
-              <span>10:04:34</span> / <span>00:00:03:711</span>
+              <span>12:16:22</span> / <span>00:00:03:548</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -417,10 +416,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC17_SubmitUsingEnterKey()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:34</span>
-<span class='badge badge-danger'>02.19.2026 10:04:38</span>
-<span class='badge badge-default'>00:00:03:711</span>
+<h5 class="test-status text-pass">TC18_PageRefreshResetsForm()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:22</span>
+<span class='badge badge-danger'>02.19.2026 12:16:26</span>
+<span class='badge badge-default'>00:00:03:548</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=9</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -433,9 +432,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:38</td>
+        <td>12:16:26</td>
         <td>
-          Form submitted using Enter key
+          Page refresh resets form
         </td>
       </tr>
   </tbody>
@@ -448,9 +447,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC09_VeryLongEmail()</p>
+            <p class="name">TC16_ModalVisibleAfterSuccess()</p>
             <p class="text-sm">
-              <span>10:04:38</span> / <span>00:00:04:168</span>
+              <span>12:16:26</span> / <span>00:00:03:651</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -458,10 +457,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC09_VeryLongEmail()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:38</span>
-<span class='badge badge-danger'>02.19.2026 10:04:42</span>
-<span class='badge badge-default'>00:00:04:168</span>
+<h5 class="test-status text-pass">TC16_ModalVisibleAfterSuccess()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:26</span>
+<span class='badge badge-danger'>02.19.2026 12:16:30</span>
+<span class='badge badge-default'>00:00:03:651</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=10</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -474,9 +473,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:42</td>
+        <td>12:16:30</td>
         <td>
-          Long email handled
+          Modal appears after successful submission
         </td>
       </tr>
   </tbody>
@@ -489,9 +488,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC19_FormIDExists()</p>
+            <p class="name">TC12_ErrorMessageVisibleWhenInvalid()</p>
             <p class="text-sm">
-              <span>10:04:43</span> / <span>00:00:03:246</span>
+              <span>12:16:30</span> / <span>00:00:03:219</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -499,10 +498,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC19_FormIDExists()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:43</span>
-<span class='badge badge-danger'>02.19.2026 10:04:46</span>
-<span class='badge badge-default'>00:00:03:246</span>
+<h5 class="test-status text-pass">TC12_ErrorMessageVisibleWhenInvalid()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:30</span>
+<span class='badge badge-danger'>02.19.2026 12:16:33</span>
+<span class='badge badge-default'>00:00:03:219</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=11</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -515,9 +514,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:46</td>
+        <td>12:16:33</td>
         <td>
-          Form ID exists and is correct
+          Error message visible on invalid email
         </td>
       </tr>
   </tbody>
@@ -530,9 +529,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC01_ValidEmailSubmission()</p>
+            <p class="name">TC11_ErrorMessageHiddenInitially()</p>
             <p class="text-sm">
-              <span>10:04:46</span> / <span>00:00:04:175</span>
+              <span>12:16:33</span> / <span>00:00:02:700</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -540,10 +539,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC01_ValidEmailSubmission()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:46</span>
-<span class='badge badge-danger'>02.19.2026 10:04:50</span>
-<span class='badge badge-default'>00:00:04:175</span>
+<h5 class="test-status text-pass">TC11_ErrorMessageHiddenInitially()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:33</span>
+<span class='badge badge-danger'>02.19.2026 12:16:36</span>
+<span class='badge badge-default'>00:00:02:700</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=12</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -556,9 +555,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:50</td>
+        <td>12:16:36</td>
         <td>
-          Valid email submitted successfully
+          Error message hidden initially
         </td>
       </tr>
   </tbody>
@@ -571,9 +570,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC03_EmptyEmail()</p>
+            <p class="name">TC17_SubmitUsingEnterKey()</p>
             <p class="text-sm">
-              <span>10:04:51</span> / <span>00:00:03:624</span>
+              <span>12:16:36</span> / <span>00:00:03:090</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -581,10 +580,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC03_EmptyEmail()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:51</span>
-<span class='badge badge-danger'>02.19.2026 10:04:54</span>
-<span class='badge badge-default'>00:00:03:624</span>
+<h5 class="test-status text-pass">TC17_SubmitUsingEnterKey()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:36</span>
+<span class='badge badge-danger'>02.19.2026 12:16:39</span>
+<span class='badge badge-default'>00:00:03:090</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=13</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -597,9 +596,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:54</td>
+        <td>12:16:39</td>
         <td>
-          Empty email validation works
+          Form submitted using Enter key
         </td>
       </tr>
   </tbody>
@@ -612,9 +611,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC13_ErrorMessageTextCorrect()</p>
+            <p class="name">TC09_VeryLongEmail()</p>
             <p class="text-sm">
-              <span>10:04:55</span> / <span>00:00:03:790</span>
+              <span>12:16:40</span> / <span>00:00:03:644</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -622,10 +621,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC13_ErrorMessageTextCorrect()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:55</span>
-<span class='badge badge-danger'>02.19.2026 10:04:58</span>
-<span class='badge badge-default'>00:00:03:790</span>
+<h5 class="test-status text-pass">TC09_VeryLongEmail()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:40</span>
+<span class='badge badge-danger'>02.19.2026 12:16:43</span>
+<span class='badge badge-default'>00:00:03:644</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=14</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -638,9 +637,9 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:04:58</td>
+        <td>12:16:43</td>
         <td>
-          Error message text correct
+          Long email handled
         </td>
       </tr>
   </tbody>
@@ -653,9 +652,9 @@
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">TC04_EmailWithSpaces()</p>
+            <p class="name">TC19_FormIDExists()</p>
             <p class="text-sm">
-              <span>10:04:59</span> / <span>00:00:03:919</span>
+              <span>12:16:43</span> / <span>00:00:02:771</span>
               <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
@@ -663,10 +662,10 @@
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-pass">TC04_EmailWithSpaces()</h5>
-<span class='badge badge-success'>02.19.2026 10:04:59</span>
-<span class='badge badge-danger'>02.19.2026 10:05:03</span>
-<span class='badge badge-default'>00:00:03:919</span>
+<h5 class="test-status text-pass">TC19_FormIDExists()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:43</span>
+<span class='badge badge-danger'>02.19.2026 12:16:46</span>
+<span class='badge badge-default'>00:00:02:771</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=15</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -679,7 +678,171 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log pass-bg">Pass</span></td>
-        <td>10:05:03</td>
+        <td>12:16:46</td>
+        <td>
+          Form ID exists and is correct
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="pass" test-id="16"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">TC01_ValidEmailSubmission()</p>
+            <p class="text-sm">
+              <span>12:16:46</span> / <span>00:00:02:952</span>
+              <span class="badge pass-bg log float-right">Pass</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-pass">TC01_ValidEmailSubmission()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:46</span>
+<span class='badge badge-danger'>02.19.2026 12:16:49</span>
+<span class='badge badge-default'>00:00:02:952</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=16</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log pass-bg">Pass</span></td>
+        <td>12:16:49</td>
+        <td>
+          Valid email submitted successfully
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="pass" test-id="17"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">TC03_EmptyEmail()</p>
+            <p class="text-sm">
+              <span>12:16:49</span> / <span>00:00:03:251</span>
+              <span class="badge pass-bg log float-right">Pass</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-pass">TC03_EmptyEmail()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:49</span>
+<span class='badge badge-danger'>02.19.2026 12:16:53</span>
+<span class='badge badge-default'>00:00:03:251</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=17</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log pass-bg">Pass</span></td>
+        <td>12:16:53</td>
+        <td>
+          Empty email validation works
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="pass" test-id="18"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">TC13_ErrorMessageTextCorrect()</p>
+            <p class="text-sm">
+              <span>12:16:53</span> / <span>00:00:02:749</span>
+              <span class="badge pass-bg log float-right">Pass</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-pass">TC13_ErrorMessageTextCorrect()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:53</span>
+<span class='badge badge-danger'>02.19.2026 12:16:56</span>
+<span class='badge badge-default'>00:00:02:749</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=18</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log pass-bg">Pass</span></td>
+        <td>12:16:56</td>
+        <td>
+          Error message text correct
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="pass" test-id="19"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">TC04_EmailWithSpaces()</p>
+            <p class="text-sm">
+              <span>12:16:56</span> / <span>00:00:02:989</span>
+              <span class="badge pass-bg log float-right">Pass</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-pass">TC04_EmailWithSpaces()</h5>
+<span class='badge badge-success'>02.19.2026 12:16:56</span>
+<span class='badge badge-danger'>02.19.2026 12:16:59</span>
+<span class='badge badge-default'>00:00:02:989</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=19</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log pass-bg">Pass</span></td>
+        <td>12:16:59</td>
         <td>
           Spaces handled correctly
         </td>
@@ -703,25 +866,25 @@
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0">Started</p>
-<h3>Feb 19, 2026 10:03:52 am</h3>
+<h3>Feb 19, 2026 12:15:20 pm</h3>
 </div></div>
 </div>
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0">Ended</p>
-<h3>Feb 19, 2026 10:05:03 am</h3>
+<h3>Feb 19, 2026 12:16:59 pm</h3>
 </div></div>
 </div>
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0 text-pass">Tests Passed</p>
-<h3>15</h3>
+<h3>16</h3>
 </div></div>
 </div>
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0 text-fail">Tests Failed</p>
-<h3>0</h3>
+<h3>3</h3>
 </div></div>
 </div>
 </div>
@@ -737,12 +900,12 @@
 </div>
 </div>
 <div class="card-footer">
-<div><small data-tooltip='100%'>
-<b>15</b> tests passed
+<div><small data-tooltip='84%'>
+<b>16</b> tests passed
 </small>
 </div>
 <div>
-<small data-tooltip='0%'><b>0</b> tests failed,
+<small data-tooltip='15%'><b>3</b> tests failed,
 <b>0</b> skipped, <b data-tooltip='0%'>0</b> others
 </small>
 </div>
@@ -760,9 +923,9 @@
 </div>
 </div>
 <div class="card-footer">
-<div><small data-tooltip='100%'><b>15</b> events passed</small></div>
+<div><small data-tooltip='83%'><b>15</b> events passed</small></div>
 <div>
-<small data-tooltip='0%'><b>0</b> events failed,
+<small data-tooltip='16%'><b>3</b> events failed,
 <b data-tooltip='%'>0</b> others
 </small>
 </div>
@@ -779,7 +942,7 @@
 </div></div>
 <script>
 var timeline = {
-"TC05_EmailWithUppercase()":7.029,"TC02_InvalidEmail_NoAtSymbol()":5.274,"TC07_NoDomain()":4.615,"TC06_MultipleAtSymbols()":4.385,"TC18_PageRefreshResetsForm()":4.239,"TC16_ModalVisibleAfterSuccess()":3.887,"TC12_ErrorMessageVisibleWhenInvalid()":4.177,"TC11_ErrorMessageHiddenInitially()":3.482,"TC17_SubmitUsingEnterKey()":3.711,"TC09_VeryLongEmail()":4.168,"TC19_FormIDExists()":3.246,"TC01_ValidEmailSubmission()":4.175,"TC03_EmptyEmail()":3.624,"TC13_ErrorMessageTextCorrect()":3.79,"TC04_EmailWithSpaces()":3.919
+"TC14_EmailInputGetsErrorClass()":0,"TC05_EmailWithUppercase()":3.277,"TC15_ModalHiddenInitially()":13.771,"TC10_DismissModal()":13.826,"TC02_InvalidEmail_NoAtSymbol()":3.733,"TC08_SpecialCharacters()":8.926,"TC07_NoDomain()":4.531,"TC06_MultipleAtSymbols()":3.332,"TC18_PageRefreshResetsForm()":3.548,"TC16_ModalVisibleAfterSuccess()":3.651,"TC12_ErrorMessageVisibleWhenInvalid()":3.219,"TC11_ErrorMessageHiddenInitially()":2.7,"TC17_SubmitUsingEnterKey()":3.09,"TC09_VeryLongEmail()":3.644,"TC19_FormIDExists()":2.771,"TC01_ValidEmailSubmission()":2.952,"TC03_EmptyEmail()":3.251,"TC13_ErrorMessageTextCorrect()":2.749,"TC04_EmailWithSpaces()":2.989
 };
 </script>
 <div class="row">
@@ -788,8 +951,8 @@ var timeline = {
 <script>
 var statusGroup = {
 parentCount: 5,
-passParent: 15,
-failParent: 0,
+passParent: 16,
+failParent: 3,
 warningParent: 0,
 skipParent: 0,
 childCount: 5,
@@ -806,7 +969,7 @@ skipGrandChild: 0,
 infoGrandChild: 0,
 eventsCount: 5,
 passEvents: 15,
-failEvents: 0,
+failEvents: 3,
 warningEvents: 0,
 skipEvents: 0,
 infoEvents: 0

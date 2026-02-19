@@ -2,9 +2,9 @@ name: Newsletter Automation CI
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -40,7 +40,6 @@ jobs:
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/google-chrome-cft /usr/local/bin/chromedriver
 
-          # Copy required chrome libs so the binary can find them
           sudo cp -r chrome-linux64/* /usr/local/bin/ 2>/dev/null || true
 
           chromedriver --version
@@ -58,6 +57,7 @@ jobs:
           echo "DISPLAY=:99" >> $GITHUB_ENV
 
       - name: Run Tests
+        id: run-tests
         env:
           DISPLAY: :99
         run: |
@@ -84,3 +84,53 @@ jobs:
             test-output/
             screenshots/
           retention-days: 7
+
+      - name: Notify Slack on success
+        if: success()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "*Newsletter Selenium Tests — PASSED*",
+              "attachments": [
+                {
+                  "color": "#36a64f",
+                  "fields": [
+                    { "title": "Repository",   "value": "${{ github.repository }}", "short": true },
+                    { "title": "Branch",       "value": "${{ github.ref_name }}",   "short": true },
+                    { "title": "Triggered by", "value": "${{ github.actor }}",      "short": true },
+                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "*Newsletter Selenium Tests — FAILED*",
+              "attachments": [
+                {
+                  "color": "#e01e5a",
+                  "fields": [
+                    { "title": "Repository",   "value": "${{ github.repository }}", "short": true },
+                    { "title": "Branch",       "value": "${{ github.ref_name }}",   "short": true },
+                    { "title": "Triggered by", "value": "${{ github.actor }}",      "short": true },
+                    { "title": "Run",          "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>", "short": true }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+#      - name: Fail build on test failures
+#        if: steps.run-tests.outcome == 'failure'
+#        run: exit 1
