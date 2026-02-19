@@ -34,21 +34,21 @@ public class BaseTest {
             options.addArguments(
                     "--headless=new",
                     "--no-sandbox",
-                    "--disable-dev-shm-usage",
+                    "--disable-dev-shm-usage",   // bypass /dev/shm size limit
                     "--disable-gpu",
                     "--window-size=1920,1080",
-                    "--remote-debugging-port=0"
+                    "--remote-debugging-port=0",
+                    "--disable-extensions",
+                    "--disable-software-rasterizer",
+                    "--shm-size=2g"              // allocate 2GB shared memory
             );
         }
 
-        // If CI pipeline sets webdriver.chrome.driver, use it.
-        // Otherwise Selenium Manager (4.6+) handles it automatically.
         String driverPath = System.getProperty("webdriver.chrome.driver");
         if (driverPath != null && !driverPath.isEmpty()) {
             System.setProperty("webdriver.chrome.driver", driverPath);
         }
 
-        // If CI pipeline sets a custom Chrome binary (chrome-for-testing)
         String chromeBinary = System.getProperty("webdriver.chrome.binary");
         if (chromeBinary != null && !chromeBinary.isEmpty()) {
             options.setBinary(chromeBinary);

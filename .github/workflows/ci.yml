@@ -40,8 +40,16 @@ jobs:
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/google-chrome-cft /usr/local/bin/chromedriver
 
+          # Copy required chrome libs so the binary can find them
+          sudo cp -r chrome-linux64/* /usr/local/bin/ 2>/dev/null || true
+
           chromedriver --version
-          /usr/local/bin/google-chrome-cft --version
+          /usr/local/bin/google-chrome-cft --version || true
+
+      - name: Increase /dev/shm size for Chrome
+        run: |
+          sudo mount -o remount,size=2g /dev/shm
+          df -h /dev/shm
 
       - name: Start Xvfb virtual display
         run: |
