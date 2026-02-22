@@ -4,12 +4,14 @@ import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.newsletter.utils.ExtentManager;
 import com.newsletter.utils.ScreenshotUtil;
+import com.newsletter.utils.TestHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,8 @@ public class BaseTest {
     protected WebDriver driver;
     protected ExtentReports extent;
     protected ExtentTest test;
+    protected WebDriverWait wait;
+    protected TestHelper helper;
 
     @BeforeEach
     public void setup(TestInfo testInfo) {
@@ -55,26 +59,16 @@ public class BaseTest {
             );
         }
 
-        String driverPath = System.getProperty("webdriver.chrome.driver");
-        log.info("ChromeDriver path: {}", driverPath);
-
-        String chromeBinary = System.getProperty("webdriver.chrome.binary");
-        log.info("Chrome binary path: {}", chromeBinary);
-
-        if (driverPath != null && !driverPath.isEmpty()) {
-            System.setProperty("webdriver.chrome.driver", driverPath);
-        }
-
-        if (chromeBinary != null && !chromeBinary.isEmpty()) {
-            options.setBinary(chromeBinary);
-        }
-
         log.info("Launching ChromeDriver...");
         driver = new ChromeDriver(options);
         log.info("ChromeDriver launched successfully");
 
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.manage().window().maximize();
+
+        // initialise wait and helper here so every test has access
+        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        helper = new TestHelper(wait, test);
 
         log.info("Navigating to application URL");
         driver.get("https://burabyo.github.io/Newsletter-sign-up-form/");
