@@ -3,9 +3,9 @@ name: Newsletter Selenium Tests
 # ── Triggers ────────────────────────────────────────────────────────────────
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 # ── Permissions ──────────────────────────────────────────────────────────────
@@ -142,7 +142,7 @@ jobs:
       - name: Send email report
         if: always()
         env:
-          GMAIL_ADDRESS:  ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_ADDRESS:  ${{ secrets.GMAIL_ADRESS }}
           GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}
           REPORT_TO:      ${{ secrets.REPORT_EMAIL }}
         run: |
