@@ -60,7 +60,6 @@ jobs:
         id: run-tests
         env:
           DISPLAY: :99
-        # '|| true' ensures the pipeline never fails even if tests fail
         run: |
           mvn test \
             -Dheadless=true \
@@ -86,242 +85,376 @@ jobs:
             screenshots/
           retention-days: 7
 
-      - name: Parse Test Results
+      - name: Parse Test Results and Generate Reports
         if: always()
         id: test-results
         run: |
-          TESTS=$(grep -h 'tests="' target/surefire-reports/*.xml | grep -oP 'tests="\K[0-9]+' | awk '{s+=$1} END {print s}')
-          FAILURES=$(grep -h 'failures="' target/surefire-reports/*.xml | grep -oP 'failures="\K[0-9]+' | awk '{s+=$1} END {print s}')
-          ERRORS=$(grep -h 'errors="' target/surefire-reports/*.xml | grep -oP 'errors="\K[0-9]+' | awk '{s+=$1} END {print s}')
-          SKIPPED=$(grep -h 'skipped="' target/surefire-reports/*.xml | grep -oP 'skipped="\K[0-9]+' | awk '{s+=$1} END {print s}')
-          PASSED=$((TESTS - FAILURES - ERRORS - SKIPPED))
+          python3 << 'PYEOF'
+          import xml.etree.ElementTree as ET
+          import glob
+          import os
+          import json
 
-          echo "total=$TESTS" >> $GITHUB_OUTPUT
-          echo "passed=$PASSED" >> $GITHUB_OUTPUT
-          echo "failed=$FAILURES" >> $GITHUB_OUTPUT
-          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          tests = failures = errors = skipped = 0
+          pass_list = []
+          fail_list = []
+          bug_reports_md = []
+          bug_reports_html = []
+          bug_reports_slack = []
 
-          PASS_LIST=$(python3 -c "
-          import xml.etree.ElementTree as ET, glob
-          results = []
           for f in sorted(glob.glob('target/surefire-reports/*.xml')):
               tree = ET.parse(f)
-              for tc in tree.findall('testcase'):
-                  if tc.find('failure') is None and tc.find('error') is None:
-                      results.append('✅ ' + tc.get('name'))
-          print('\n'.join(results))
-          " | tr '\n' '|' | sed 's/|/\\n/g' | sed 's/\\n$//')
+              root = tree.getroot()
 
-          FAIL_LIST=$(python3 -c "
-          import xml.etree.ElementTree as ET, glob
-          results = []
-          for f in sorted(glob.glob('target/surefire-reports/*.xml')):
-              tree = ET.parse(f)
-              for tc in tree.findall('testcase'):
-                  if tc.find('failure') is not None or tc.find('error') is not None:
-                      results.append('❌ ' + tc.get('name'))
-          print('\n'.join(results))
-          " | tr '\n' '|' | sed 's/|/\\n/g' | sed 's/\\n$//')
+              tests   += int(root.get('tests', 0))
+              failures += int(root.get('failures', 0))
+              errors   += int(root.get('errors', 0))
+              skipped  += int(root.get('skipped', 0))
 
-          echo "pass_list=$PASS_LIST" >> $GITHUB_OUTPUT
-          echo "fail_list=$FAIL_LIST" >> $GITHUB_OUTPUT
+              for tc in root.findall('testcase'):
+                  name = tc.get('name')
+                  classname = tc.get('classname', '')
+                  failure = tc.find('failure')
+                  error   = tc.find('error')
 
-      - name: Generate Failure Explanation Report
-        if: always()
-        run: |
-          cat > failure-report.md << 'EOF'
-          # Newsletter Automation — Test Failure Explanation Report
+                  if failure is not None or error is not None:
+                      fail_list.append(name)
+                      node = failure if failure is not None else error
+                      fail_type    = node.get('type', 'Unknown')
+                      fail_message = node.get('message', 'No message provided')
+                      fail_text    = (node.text or '').strip()
 
-         
+                      # Trim stacktrace to first 5 lines to keep it readable
+                      stacktrace_lines = fail_text.split('\n')[:5]
+                      stacktrace = '\n'.join(stacktrace_lines)
 
-      - name: Upload Failure Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: failure-explanation-report
-          path: failure-report.md
-          retention-days: 7
+                      # Markdown bug report
+                      bug_reports_md.append(f"""
+          ---
 
-      - name: Send Email on success
-        if: always()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.GMAIL_ADRESS }}
-          password: ${{ secrets.GMAIL_APP_PASS }}
-          to: ${{ secrets.REPORT_EMAIL }}
-          from: Newsletter CI <${{ secrets.GMAIL_ADRESS }}>
-          subject: "📋 Newsletter Selenium Tests — Run #${{ github.run_number }} Complete"
-          html_body: |
-            <html>
-            <body style="font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; background: #f9f9f9;">
-              <div style="background: #36a64f; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-                <h1 style="margin:0; font-size: 22px;">📋 Newsletter Selenium Tests — Run Complete</h1>
-              </div>
-              <div style="background: white; padding: 20px; border: 1px solid #ddd;">
+          ## Bug Report: {name}
 
-                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px;">📋 Run Details</h3>
-                <table style="width:100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px; color: #666; width: 40%;"><strong>📁 Repository</strong></td>
-                    <td style="padding: 8px;">${{ github.repository }}</td>
-                  </tr>
-                  <tr style="background:#f9f9f9;">
-                    <td style="padding: 8px; color: #666;"><strong>🌿 Branch</strong></td>
-                    <td style="padding: 8px;">${{ github.ref_name }}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px; color: #666;"><strong>👤 Triggered by</strong></td>
-                    <td style="padding: 8px;">${{ github.actor }}</td>
-                  </tr>
-                  <tr style="background:#f9f9f9;">
-                    <td style="padding: 8px; color: #666;"><strong>🔗 Run</strong></td>
-                    <td style="padding: 8px;">
-                      <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color: #36a64f;">
-                        View Run #${{ github.run_number }}
-                      </a>
-                    </td>
-                  </tr>
-                </table>
+          **Class:** `{classname}`
 
-                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">📊 Test Summary</h3>
-                <table style="width:100%; border-collapse: collapse; text-align: center;">
-                  <tr style="background: #f0f0f0;">
-                    <th style="padding: 10px; border: 1px solid #ddd;">📋 Total</th>
-                    <th style="padding: 10px; border: 1px solid #ddd;">✅ Passed</th>
-                    <th style="padding: 10px; border: 1px solid #ddd;">❌ Failed</th>
-                    <th style="padding: 10px; border: 1px solid #ddd;">⏭️ Skipped</th>
-                  </tr>
-                  <tr>
-                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold;">${{ steps.test-results.outputs.total }}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #36a64f;">${{ steps.test-results.outputs.passed }}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #e01e5a;">${{ steps.test-results.outputs.failed }}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #888;">${{ steps.test-results.outputs.skipped }}</td>
-                  </tr>
-                </table>
+          **Failure Type:** `{fail_type}`
 
-                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">✅ Passed Tests</h3>
-                <p style="background: #f6ffed; border-left: 4px solid #36a64f; padding: 12px; white-space: pre-line; font-family: monospace;">${{ steps.test-results.outputs.pass_list }}</p>
+          **Description:**
+          The test `{name}` failed during the automated test run. This indicates the application behaviour does not match the expected outcome defined in the test.
 
-                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">❌ Failed Tests</h3>
-                <p style="background: #fff0f3; border-left: 4px solid #e01e5a; padding: 12px; white-space: pre-line; font-family: monospace;">${{ steps.test-results.outputs.fail_list }}</p>
+          **Failure Message:**
+  ```
+  {fail_message}
+  ```
 
-                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">📝 Why Tests Failed</h3>
-                <table style="width:100%; border-collapse: collapse;">
-                  <tr style="background: #f0f0f0;">
-                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Test</th>
-                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Reason</th>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">TC08</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">App rejects RFC-valid special characters in email</td>
-                  </tr>
-                  <tr style="background:#f9f9f9;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">TC10</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">Wrong wait condition used for hidden modal check</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">TC14</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">App does not apply error CSS class to input on validation failure</td>
-                  </tr>
-                  <tr style="background:#f9f9f9;">
-                    <td style="padding: 8px; border: 1px solid #ddd;">TC15</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">Wrong wait condition used for initial hidden modal state</td>
-                  </tr>
-                </table>
-                <p style="color: #666; font-size: 13px; margin-top: 12px;">These are known application behaviour gaps. The pipeline is configured to pass regardless so other tests are not blocked.</p>
+  **Stacktrace (first 5 lines):**
+  ```
+  {stacktrace}
+  ```
+  
+  **Steps to Reproduce:**
+  1. Run the test `{name}` against the Newsletter Signup form
+  2. Observe the failure at the point described in the message above
+  
+  **Expected Result:**
+  The test assertion should pass and the application should behave as specified
+  
+  **Actual Result:**
+  {fail_message}
+  
+  **Environment:**
+  - Application: Newsletter Sign-up Form
+- Platform: Web (Headless Chrome on Ubuntu)
+- CI Run: GitHub Actions
+  """)
 
-              </div>
-              <div style="background: #f0f0f0; padding: 12px; border-radius: 0 0 8px 8px; text-align: center; color: #888; font-size: 12px;">
-                🕒 ${{ github.event.head_commit.timestamp }} • Newsletter Automation CI
-              </div>
-            </body>
-            </html>
+                      # HTML bug report card
+                      bug_reports_html.append(f"""
+<div style="border: 1px solid #e01e5a; border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+  <h4 style="color: #e01e5a; margin-top: 0;">&#10060; {name}</h4>
+  <p><strong>Class:</strong> <code>{classname}</code></p>
+  <p><strong>Failure Type:</strong> <code>{fail_type}</code></p>
+  <p><strong>Description:</strong> The test <code>{name}</code> failed. The application behaviour does not match the expected outcome.</p>
+  <p><strong>Failure Message:</strong></p>
+  <pre style="background:#fff0f3; padding:10px; border-radius:4px; font-size:12px; overflow:auto;">{fail_message}</pre>
+  <p><strong>Steps to Reproduce:</strong><br>
+  1. Run test <code>{name}</code> against the Newsletter Signup form<br>
+  2. Observe failure at the assertion described above</p>
+  <p><strong>Expected:</strong> Test assertion passes<br>
+  <strong>Actual:</strong> {fail_message}</p>
+  </div>""")
+  
+  # Slack block for this failure
+  safe_message = fail_message.replace('"', "'").replace('\\', '/')[:300]
+  bug_reports_slack.append(f"""{{
+"type": "section",
+"text": {{
+  "type": "mrkdwn",
+  "text": "*\\u274c {name}*\\n*Type:* `{fail_type}`\\n*Message:* {safe_message}"
+}}
+}},
+  {{
+    "type": "divider"
+  }}""")
 
-      - name: Notify Slack on completion
-        if: always()
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "📋 Newsletter Selenium Tests — Run Complete"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    { "type": "mrkdwn", "text": "*📁 Repository*\n${{ github.repository }}" },
-                    { "type": "mrkdwn", "text": "*🌿 Branch*\n${{ github.ref_name }}" },
-                    { "type": "mrkdwn", "text": "*👤 Triggered by*\n${{ github.actor }}" },
-                    { "type": "mrkdwn", "text": "*🔗 Run*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run #${{ github.run_number }}>" }
-                  ]
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": { "type": "mrkdwn", "text": "*📊 Test Summary*" }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    { "type": "mrkdwn", "text": "*📋 Total*\n${{ steps.test-results.outputs.total }}" },
-                    { "type": "mrkdwn", "text": "*✅ Passed*\n${{ steps.test-results.outputs.passed }}" },
-                    { "type": "mrkdwn", "text": "*❌ Failed*\n${{ steps.test-results.outputs.failed }}" },
-                    { "type": "mrkdwn", "text": "*⏭️ Skipped*\n${{ steps.test-results.outputs.skipped }}" }
-                  ]
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*✅ Passed Tests*\n${{ steps.test-results.outputs.pass_list }}"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*❌ Failed Tests*\n${{ steps.test-results.outputs.fail_list }}"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*📝 Why Tests Failed*\n*TC08* — App rejects RFC-valid special characters\n*TC10* — Wrong wait condition for hidden modal\n*TC14* — App doesn't apply error CSS class to input\n*TC15* — Wrong wait condition for initial hidden state"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "context",
-                  "elements": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "🕒 ${{ github.event.head_commit.timestamp }} • These are known app behaviour gaps — pipeline passes regardless"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+                  else:
+                      pass_list.append(name)
+
+          passed = tests - failures - errors - skipped
+
+          # Write GitHub outputs
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              fh.write(f"total={tests}\n")
+  fh.write(f"passed={passed}\n")
+  fh.write(f"failed={failures + errors}\n")
+  fh.write(f"skipped={skipped}\n")
+
+# Write bug reports to files so next steps can read them
+with open('bug_reports.html', 'w') as f:
+  f.write('\n'.join(bug_reports_html))
+
+with open('bug_reports_slack.json', 'w') as f:
+  f.write(',\n'.join(bug_reports_slack))
+
+# Write full markdown failure report
+with open('failure-report.md', 'w') as f:
+  f.write("# Newsletter Automation — Test Failure Report\n\n")
+  f.write(f"## Summary\n\n")
+  f.write(f"| Total | Passed | Failed | Skipped |\n")
+  f.write(f"|-------|--------|--------|---------|\n")
+  f.write(f"| {tests} | {passed} | {failures + errors} | {skipped} |\n\n")
+  if bug_reports_md:
+    f.write("## Failed Tests\n")
+    f.write('\n'.join(bug_reports_md))
+  else:
+    f.write("## All tests passed! No failures to report.\n")
+
+print(f"Parsed: {tests} total, {passed} passed, {failures + errors} failed, {skipped} skipped")
+  PYEOF
+
+- name: Upload Failure Report
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: failure-explanation-report
+    path: failure-report.md
+    retention-days: 7
+
+- name: Send Email Report
+  if: always()
+  uses: dawidd6/action-send-mail@v3
+  with:
+    server_address: smtp.gmail.com
+    server_port: 465
+    username: ${{ secrets.GMAIL_ADRESS }}
+    password: ${{ secrets.GMAIL_APP_PASS }}
+    to: ${{ secrets.REPORT_EMAIL }}
+    from: Newsletter CI <${{ secrets.GMAIL_ADRESS }}>
+    subject: "📋 Newsletter Selenium Tests — Run #${{ github.run_number }} Complete"
+    html_body: |
+      <html>
+      <body style="font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; background: #f9f9f9;">
+        <div style="background: #2c3e50; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <h1 style="margin:0; font-size: 22px;">📋 Newsletter Selenium Tests — Run Complete</h1>
+        </div>
+        <div style="background: white; padding: 20px; border: 1px solid #ddd;">
+      
+          <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px;">📋 Run Details</h3>
+          <table style="width:100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px; color: #666; width: 40%;"><strong>📁 Repository</strong></td>
+              <td style="padding: 8px;">${{ github.repository }}</td>
+            </tr>
+            <tr style="background:#f9f9f9;">
+              <td style="padding: 8px; color: #666;"><strong>🌿 Branch</strong></td>
+              <td style="padding: 8px;">${{ github.ref_name }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; color: #666;"><strong>👤 Triggered by</strong></td>
+              <td style="padding: 8px;">${{ github.actor }}</td>
+            </tr>
+            <tr style="background:#f9f9f9;">
+              <td style="padding: 8px; color: #666;"><strong>🔗 Run</strong></td>
+              <td style="padding: 8px;">
+                <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color: #2c3e50;">
+                  View Run #${{ github.run_number }}
+                </a>
+              </td>
+            </tr>
+          </table>
+      
+          <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">📊 Test Summary</h3>
+          <table style="width:100%; border-collapse: collapse; text-align: center;">
+            <tr style="background: #f0f0f0;">
+              <th style="padding: 10px; border: 1px solid #ddd;">📋 Total</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">✅ Passed</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">❌ Failed</th>
+              <th style="padding: 10px; border: 1px solid #ddd;">⏭️ Skipped</th>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold;">${{ steps.test-results.outputs.total }}</td>
+              <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #36a64f;">${{ steps.test-results.outputs.passed }}</td>
+              <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #e01e5a;">${{ steps.test-results.outputs.failed }}</td>
+              <td style="padding: 10px; border: 1px solid #ddd; font-size: 20px; font-weight: bold; color: #888;">${{ steps.test-results.outputs.skipped }}</td>
+            </tr>
+          </table>
+      
+          <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">🐛 Bug Reports — Failed Tests</h3>
+          BUG_REPORTS_PLACEHOLDER
+      
+          <p style="color: #666; font-size: 13px; margin-top: 12px; border-top: 1px solid #eee; padding-top: 12px;">
+            These are application defects detected by the automated test suite. The pipeline is configured to continue regardless so passing tests are not blocked.
+          </p>
+        </div>
+        <div style="background: #f0f0f0; padding: 12px; border-radius: 0 0 8px 8px; text-align: center; color: #888; font-size: 12px;">
+          🕒 ${{ github.event.head_commit.timestamp }} • Newsletter Automation CI
+        </div>
+      </body>
+      </html>
+
+- name: Build and Send Dynamic Email
+  if: always()
+  run: |
+    BUG_HTML=$(cat bug_reports.html)
+    python3 - << PYEOF
+    import subprocess
+    
+    with open('email_template.html', 'r') as f:
+        template = f.read()
+    
+    # Read the email action output and inject bug reports
+    # We build the final email body by reading the html file
+    PYEOF
+    
+    # Read the html file generated by parser and inject into a complete email
+    python3 << 'PYEOF'
+    import os
+    
+    with open('bug_reports.html', 'r') as f:
+        bug_html = f.read()
+    
+    email_body = f"""<html>
+    <body style="font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; background: #f9f9f9;">
+      <div style="background: #2c3e50; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+        <h1 style="margin:0; font-size: 22px;">&#x1F4CB; Newsletter Selenium Tests — Run Complete</h1>
+      </div>
+      <div style="background: white; padding: 20px; border: 1px solid #ddd;">
+        <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px;">&#x1F4CB; Run Details</h3>
+        <table style="width:100%; border-collapse: collapse;">
+          <tr><td style="padding:8px;color:#666;width:40%;"><strong>Repository</strong></td><td style="padding:8px;">{os.environ.get('GITHUB_REPOSITORY','')}</td></tr>
+          <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><strong>Branch</strong></td><td style="padding:8px;">{os.environ.get('GITHUB_REF_NAME','')}</td></tr>
+          <tr><td style="padding:8px;color:#666;"><strong>Triggered by</strong></td><td style="padding:8px;">{os.environ.get('GITHUB_ACTOR','')}</td></tr>
+          <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><strong>Run</strong></td>
+            <td style="padding:8px;"><a href="{os.environ.get('GITHUB_SERVER_URL','')}/{os.environ.get('GITHUB_REPOSITORY','')}/actions/runs/{os.environ.get('GITHUB_RUN_ID','')}" style="color:#2c3e50;">View Run #{os.environ.get('GITHUB_RUN_NUMBER','')}</a></td>
+          </tr>
+        </table>
+    
+        <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">&#x1F4CA; Test Summary</h3>
+        <p style="color:#666; font-size:13px;">See the full summary numbers in the GitHub Actions run linked above. Individual bug reports for each failure are listed below.</p>
+    
+        <h3 style="border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 24px;">&#x1F41B; Bug Reports — Failed Tests</h3>
+        {bug_html if bug_html.strip() else '<p style="color: #36a64f;">&#x2705; All tests passed! No failures to report.</p>'}
+    
+        <p style="color:#666; font-size:13px; margin-top:12px; border-top:1px solid #eee; padding-top:12px;">
+          These defects were detected automatically by the test suite. The pipeline continues regardless so passing tests are not blocked.
+        </p>
+      </div>
+      <div style="background:#f0f0f0; padding:12px; border-radius:0 0 8px 8px; text-align:center; color:#888; font-size:12px;">
+        Newsletter Automation CI
+      </div>
+    </body>
+    </html>"""
+    
+    with open('final_email.html', 'w') as f:
+        f.write(email_body)
+    
+    print("Email body generated successfully")
+    PYEOF
+
+- name: Send Dynamic Email
+  if: always()
+  uses: dawidd6/action-send-mail@v3
+  with:
+    server_address: smtp.gmail.com
+    server_port: 465
+    username: ${{ secrets.GMAIL_ADRESS }}
+    password: ${{ secrets.GMAIL_APP_PASS }}
+    to: ${{ secrets.REPORT_EMAIL }}
+    from: Newsletter CI <${{ secrets.GMAIL_ADRESS }}>
+    subject: "📋 Newsletter Selenium Tests — Run #${{ github.run_number }} Complete"
+    html_body: file://final_email.html
+
+- name: Build and Send Slack Notification
+  if: always()
+  run: |
+    python3 << 'PYEOF'
+    import json
+    import urllib.request
+    import os
+    
+    with open('bug_reports_slack.json', 'r') as f:
+        content = f.read().strip()
+    
+    total   = os.environ.get('TOTAL', '0')
+    passed  = os.environ.get('PASSED', '0')
+    failed  = os.environ.get('FAILED', '0')
+    skipped = os.environ.get('SKIPPED', '0')
+    
+    repo       = os.environ.get('GITHUB_REPOSITORY', '')
+    ref        = os.environ.get('GITHUB_REF_NAME', '')
+    actor      = os.environ.get('GITHUB_ACTOR', '')
+    server_url = os.environ.get('GITHUB_SERVER_URL', '')
+    run_id     = os.environ.get('GITHUB_RUN_ID', '')
+    run_number = os.environ.get('GITHUB_RUN_NUMBER', '')
+    
+    bug_blocks = f",\n{content}" if content.strip() else ""
+    
+    payload = f"""{{
+      "blocks": [
+        {{
+          "type": "header",
+          "text": {{ "type": "plain_text", "text": "Newsletter Selenium Tests — Run Complete" }}
+        }},
+        {{ "type": "divider" }},
+        {{
+          "type": "section",
+          "fields": [
+            {{ "type": "mrkdwn", "text": "*Repository*\\n{repo}" }},
+            {{ "type": "mrkdwn", "text": "*Branch*\\n{ref}" }},
+            {{ "type": "mrkdwn", "text": "*Triggered by*\\n{actor}" }},
+            {{ "type": "mrkdwn", "text": "*Run*\\n<{server_url}/{repo}/actions/runs/{run_id}|View Run #{run_number}>" }}
+          ]
+        }},
+        {{ "type": "divider" }},
+        {{
+          "type": "section",
+          "fields": [
+            {{ "type": "mrkdwn", "text": "*Total*\\n{total}" }},
+            {{ "type": "mrkdwn", "text": "*Passed*\\n{passed}" }},
+            {{ "type": "mrkdwn", "text": "*Failed*\\n{failed}" }},
+            {{ "type": "mrkdwn", "text": "*Skipped*\\n{skipped}" }}
+          ]
+        }},
+        {{ "type": "divider" }},
+        {{
+          "type": "section",
+          "text": {{ "type": "mrkdwn", "text": "*Bug Reports — Failed Tests*" }}
+        }}
+        {bug_blocks}
+      ]
+    }}"""
+    
+    webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
+    req = urllib.request.Request(
+        webhook_url,
+        data=payload.encode('utf-8'),
+        headers={{'Content-Type': 'application/json'}}
+    )
+    with urllib.request.urlopen(req) as resp:
+        print(f"Slack response: {{resp.status}}")
+    PYEOF
+  env:
+    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    TOTAL: ${{ steps.test-results.outputs.total }}
+    PASSED: ${{ steps.test-results.outputs.passed }}
+    FAILED: ${{ steps.test-results.outputs.failed }}
+    SKIPPED: ${{ steps.test-results.outputs.skipped }}
