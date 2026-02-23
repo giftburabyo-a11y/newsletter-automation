@@ -117,71 +117,7 @@ jobs:
           comment_on_pr: true
           fail_on: "test failures"
 
-      # 7. Generate Allure Report
-      - name: Generate Allure Report
-        run: mvn allure:report
-        if: always()
 
-      # 8. Upload Allure Report as artifact
-      - name: Upload Allure Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: allure-report
-          path: target/site/allure-maven-plugin/
-
-      # 9. Upload Surefire reports as downloadable artifact
-      - name: Upload test reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: surefire-reports-${{ github.run_number }}
-          path: target/surefire-reports/
-          retention-days: 14
-
-      # 9b. Extract rich failure details from Allure JSON
-      - name: Extract rich failure details
-        if: always()
-        id: extract-failures
-        run: |
-          python3 << 'PYEOF'
-          import json, os, sys, re
-          from glob import glob
-          failing_tests = []
-          for json_file in sorted(glob("target/allure-results/*-result.json")):
-              try:
-                  with open(json_file, 'r', encoding='utf-8') as f:
-                      data = json.load(f)
-              except: continue
-              if data.get("status") in ["failed", "broken"]:
-                  labels = {l["name"]: l["value"] for l in data.get("labels", [])}
-                  test_class = labels.get("testClass", "").split(".")[-1] or "Unknown"
-          
-                  steps_list = []
-                  for i, s in enumerate(data.get("steps", []), 1):
-                      steps_list.append(f"{i}. {s.get('name', 'Step')}")
-                  steps_str = "\n".join(steps_list) if steps_list else "See full report for trace."
-                  desc = data.get("description", "No description provided.")
-                  impact = "High: Defect needs immediate investigation."
-                  if "**Impact:**" in desc:
-                      parts = desc.split("**Impact:**")
-                      desc, impact = parts[0].strip(), parts[1].strip()
-                  severity = labels.get("severity", "normal").capitalize()
-                  priority = "High" if severity in ["Blocker", "Critical"] else ("Medium" if severity == "Normal" else "Low")
-                  has_ss = any("screenshot" in att.get("name", "").lower() for att in data.get("attachments", []))
-                  failing_tests.append({
-                      "name": data.get("name", "Unknown"),
-                      "class": test_class,
-                      "desc": desc,
-                      "steps": steps_str,
-                      "expected": data.get("statusDetails", {}).get("message", "N/A"),
-                      "impact": impact,
-                      "priority": f"{priority} ({severity})",
-                      "screenshot": "📸 Captured" if has_ss else "❌ None"
-                  })
-          with open("rich_failures.json", "w") as f:
-              json.dump(failing_tests, f)
-          PYEOF
       - name: Send email report
         if: always()
         env:
@@ -190,7 +126,7 @@ jobs:
           REPORT_TO:      ${{ secrets.REPORT_EMAIL }}
         run: |
           python3 << 'PYEOF'
-          import os, smtplib, json
+          import os, smtplib
           from email.mime.multipart import MIMEMultipart
           from email.mime.text import MIMEText
           from datetime import datetime, timezone
@@ -202,110 +138,190 @@ jobs:
           failed   = "${{ steps.parse-results.outputs.failed }}"   or "0"
           skipped  = "${{ steps.parse-results.outputs.skipped }}"  or "0"
           pass_pct = "${{ steps.parse-results.outputs.pass_pct }}" or "0"
-          
-          # Load rich failures
-          try:
-              with open("rich_failures.json", "r") as f:
-                  rich_failures = json.load(f)
-          except: rich_failures = []
+          failures_html = "${{ steps.parse-results.outputs.failures_html }}"
           outcome = "${{ steps.run-tests.outcome }}"
           is_pass = (outcome == "success" and int(failed) == 0)
           status    = "PASSED"  if is_pass else "FAILED"
           s_icon    = "✅"       if is_pass else "❌"
-          s_color   = "#2e7d32" if is_pass else "#e01e5a"
-          s_bg      = "#e8f5e9" if is_pass else "#fff5f7"
+          s_color   = "#2e7d32" if is_pass else "#b71c1c"
+          s_bg      = "#e8f5e9" if is_pass else "#ffebee"
+          next_steps = (
+            "All tests passed. The build is stable and the newsletter feature is "
+            "working as expected. No immediate action is required."
+          ) if is_pass else (
+            "<strong>Action required.</strong> One or more tests failed. Please:<br>"
+            "&nbsp;&nbsp;1. Review the failed tests in the table below.<br>"
+            "&nbsp;&nbsp;2. Open the GitHub Actions run for full logs and stack traces.<br>"
+            "&nbsp;&nbsp;3. Download the Surefire or Allure report artifacts for deeper analysis.<br>"
+            "&nbsp;&nbsp;4. Fix the issue and push a new commit to re-trigger the pipeline."
+          )
+          event = "${{ github.event_name }}"
+          trigger = {
+            "push":               "Push to branch",
+            "pull_request":       "Pull Request #${{ github.event.pull_request.number }}",
+            "workflow_dispatch":  "Manual trigger",
+          }.get(event, event)
           run_url    = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          artifacts_url = f"{run_url}#artifacts"
+          commit_url = "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          short_sha  = "${{ github.sha }}"[:7]
           timestamp  = datetime.now(timezone.utc).strftime("%d %B %Y at %H:%M UTC")
-          # Build detailed failure blocks for Email
+          # Failures table — only shown when tests fail
           fail_block = ""
-          if rich_failures:
-              fail_block = f'<h2 style="margin:32px 0 12px;font-size:18px;color:#e01e5a">🚨 {len(rich_failures)} Failing Test Case(s) — Detailed Report</h2>'
-              for i, t in enumerate(rich_failures, 1):
-                  fail_block += f"""
-                  <div style="border:1px solid #ffccd5; border-radius:8px; margin-bottom:20px; background:#fffcfc; overflow:hidden">
-                    <div style="background:#fff0f3; padding:12px 16px; border-bottom:1px solid #ffccd5">
-                      <strong style="color:#c92a2a; font-size:15px">Test case {i}: {t['name']}</strong><br>
-                      <small style="color:#666">Class: {t['class']}</small>
-                    </div>
-                    <div style="padding:16px; font-size:13px; line-height:1.6; color:#333">
-                      <p style="margin:0 0 10px"><strong>Description:</strong><br>{t['desc']}</p>
-                      <p style="margin:0 0 10px"><strong>Steps to Reproduce:</strong><br><span style="white-space:pre-wrap">{t['steps']}</span></p>
-                      <p style="margin:0 0 10px"><strong>Actual Result:</strong><br><code style="background:#f8f9fa; padding:4px 8px; display:block; border:1px solid #dee2e6">{t['expected']}</code></p>
-                      <p style="margin:0 0 10px"><strong>Impact:</strong><br>{t['impact']}</p>
-                      <div style="display:flex; gap:20px; margin-top:15px; border-top:1px solid #eee; padding-top:10px">
-                        <span><strong>Priority:</strong> {t['priority']}</span>&nbsp;&nbsp;&nbsp;
-                        <span><strong>Screenshot:</strong> {t['screenshot']}</span>
-                      </div>
-                    </div>
-                  </div>"""
-          html = f"""<!DOCTYPE html><html><body style="margin:0;padding:20px;background:#f4f6f9;font-family:Arial,sans-serif">
-          <table width="640" align="center" style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1)">
-            <tr><td style="background:#1a237e;padding:30px;color:#fff">
-              <h1 style="margin:0;font-size:24px">Newsletter CI Report</h1>
-              <p style="margin:5px 0 0;opacity:0.8">Run #{run_num} &middot; {status}</p>
+          if failures_html.strip():
+            fail_block = f"""
+            <h2 style="margin:32px 0 12px;font-size:17px;color:#b71c1c">&#10060; Failed Tests</h2>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border-collapse:collapse;border-radius:8px;overflow:hidden;
+                          box-shadow:0 1px 4px rgba(0,0,0,.08)">
+              <thead>
+                <tr style="background:#b71c1c">
+                  <th style="padding:10px 12px;text-align:left;font-size:12px;color:#fff">Class</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:12px;color:#fff">Test Name</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:12px;color:#fff">Failure Message</th>
+                </tr>
+              </thead>
+              <tbody>{failures_html}</tbody>
+            </table>"""
+          html = f"""<!DOCTYPE html><html lang="en">
+          <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+          <body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 0">
+          <tr><td align="center">
+          <table width="620" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%">
+            <!-- Header -->
+            <tr><td style="background:#1a237e;border-radius:10px 10px 0 0;padding:28px 36px">
+              <p style="margin:0;font-size:11px;color:#9fa8da;letter-spacing:1px;text-transform:uppercase">Automated Test Report</p>
+              <h1 style="margin:6px 0 0;font-size:24px;color:#fff;font-weight:700">Newsletter CI Pipeline</h1>
+              <p style="margin:6px 0 0;font-size:12px;color:#9fa8da">${{ github.repository }} &nbsp;&middot;&nbsp; Run #${{ github.run_number }}</p>
             </td></tr>
-            <tr><td style="padding:20px 30px;background:{s_bg};border-left:5px solid {s_color}">
-              <p style="margin:0;font-size:18px;font-weight:700;color:{s_color}">{s_icon} Test Suite {status}</p>
-              <p style="margin:5px 0 0;font-size:12px;color:#666">Completed {timestamp}</p>
+            <!-- Status banner -->
+            <tr><td style="background:{s_bg};padding:20px 36px;border-left:5px solid {s_color}">
+              <p style="margin:0;font-size:20px;font-weight:700;color:{s_color}">{s_icon}&nbsp; Build {status}</p>
+              <p style="margin:6px 0 0;font-size:12px;color:#555">Completed on {timestamp}</p>
             </td></tr>
-            <tr><td style="padding:30px">
-              <table width="100%" style="margin-bottom:20px">
+            <!-- Body -->
+            <tr><td style="background:#fff;padding:28px 36px">
+              <!-- Run details -->
+              <h2 style="margin:0 0 14px;font-size:17px;color:#1a237e">Run Details</h2>
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="border:1px solid #e8eaf0;border-radius:8px;overflow:hidden;margin-bottom:28px;font-size:13px">
+                <tr style="background:#f5f7ff">
+                  <td style="padding:9px 14px;font-weight:700;color:#3949ab;border-bottom:1px solid #e8eaf0;width:38%">Field</td>
+                  <td style="padding:9px 14px;font-weight:700;color:#3949ab;border-bottom:1px solid #e8eaf0">Value</td>
+                </tr>
                 <tr>
-                  <td align="center" style="background:#e8f5e9;padding:15px;border-radius:6px"><div style="color:#2e7d32;font-size:20px;font-weight:700">{passed}</div><div style="font-size:11px;color:#666">PASSED</div></td>
-                  <td width="10"></td>
-                  <td align="center" style="background:#fff5f7;padding:15px;border-radius:6px"><div style="color:#e01e5a;font-size:20px;font-weight:700">{failed}</div><div style="font-size:11px;color:#666">FAILED</div></td>
-                  <td width="10"></td>
-                  <td align="center" style="background:#f5f5f5;padding:15px;border-radius:6px"><div style="color:#666;font-size:20px;font-weight:700">{total}</div><div style="font-size:11px;color:#666">TOTAL</div></td>
+                  <td style="padding:9px 14px;color:#555;border-bottom:1px solid #f0f0f0;font-weight:600">Repository</td>
+                  <td style="padding:9px 14px;color:#222;border-bottom:1px solid #f0f0f0">${{ github.repository }}</td>
+                </tr>
+                <tr style="background:#fafafa">
+                  <td style="padding:9px 14px;color:#555;border-bottom:1px solid #f0f0f0;font-weight:600">Branch</td>
+                  <td style="padding:9px 14px;color:#222;border-bottom:1px solid #f0f0f0">${{ github.ref_name }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:9px 14px;color:#555;border-bottom:1px solid #f0f0f0;font-weight:600">Commit</td>
+                  <td style="padding:9px 14px;color:#222;border-bottom:1px solid #f0f0f0">
+                    <a href="{commit_url}" style="color:#1a237e">{short_sha}</a>
+                    &nbsp;&mdash;&nbsp;${{ github.event.head_commit.message }}
+                  </td>
+                </tr>
+                <tr style="background:#fafafa">
+                  <td style="padding:9px 14px;color:#555;border-bottom:1px solid #f0f0f0;font-weight:600">Triggered by</td>
+                  <td style="padding:9px 14px;color:#222;border-bottom:1px solid #f0f0f0">${{ github.actor }} &nbsp;({trigger})</td>
+                </tr>
+                <tr>
+                  <td style="padding:9px 14px;color:#555;font-weight:600">Environment</td>
+                  <td style="padding:9px 14px;color:#222">ubuntu-latest &nbsp;&middot;&nbsp; Java 21 &nbsp;&middot;&nbsp; Headless Chrome</td>
                 </tr>
               </table>
+              <!-- Test stats -->
+              <h2 style="margin:0 0 14px;font-size:17px;color:#1a237e">Test Summary</h2>
+              <table width="100%" cellpadding="6" cellspacing="6" style="margin-bottom:12px">
+                <tr>
+                  <td style="background:#e8f5e9;border-radius:8px;padding:14px;text-align:center">
+                    <p style="margin:0;font-size:26px;font-weight:700;color:#2e7d32">{passed}</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px">Passed</p>
+                  </td>
+                  <td style="background:#ffebee;border-radius:8px;padding:14px;text-align:center">
+                    <p style="margin:0;font-size:26px;font-weight:700;color:#b71c1c">{failed}</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px">Failed</p>
+                  </td>
+                  <td style="background:#fff8e1;border-radius:8px;padding:14px;text-align:center">
+                    <p style="margin:0;font-size:26px;font-weight:700;color:#f57f17">{skipped}</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px">Skipped</p>
+                  </td>
+                  <td style="background:#f5f5f5;border-radius:8px;padding:14px;text-align:center">
+                    <p style="margin:0;font-size:26px;font-weight:700;color:#333">{total}</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.5px">Total</p>
+                  </td>
+                </tr>
+              </table>
+              <!-- Pass rate bar -->
+              <p style="margin:4px 0 6px;font-size:13px;color:#555">Pass rate: <strong>{pass_pct}%</strong></p>
+              <div style="background:#e0e0e0;border-radius:99px;height:10px;margin-bottom:28px">
+                <div style="background:{s_color};width:{pass_pct}%;height:10px;border-radius:99px;min-width:4px"></div>
+              </div>
               {fail_block}
-              <div style="text-align:center;margin-top:30px">
-                <a href="{run_url}" style="background:#1a237e;color:#fff;padding:12px 25px;text-decoration:none;border-radius:5px;font-weight:700">View Run on GitHub</a>
-                <br><br>
-                <a href="{artifacts_url}" style="color:#1a237e;font-size:13px">Download Allure Report Artifact &rarr;</a>
+              <!-- Next steps -->
+              <h2 style="margin:32px 0 12px;font-size:17px;color:#1a237e">Next Steps</h2>
+              <div style="background:#f5f7ff;border-radius:8px;padding:16px 20px;font-size:13px;color:#333;line-height:1.8">
+                {next_steps}
+              </div>
+              <!-- CTA button -->
+              <div style="text-align:center;margin-top:32px">
+                <a href="{run_url}"
+                   style="display:inline-block;background:#1a237e;color:#fff;text-decoration:none;
+                          padding:14px 36px;border-radius:6px;font-size:14px;font-weight:700">
+                  View Full Run on GitHub &rarr;
+                </a>
               </div>
             </td></tr>
-          </table></body></html>"""
+            <!-- Footer -->
+            <tr><td style="background:#f5f7ff;border-radius:0 0 10px 10px;padding:16px 36px;
+                           text-align:center;border-top:1px solid #e8eaf0">
+              <p style="margin:0;font-size:11px;color:#9e9e9e">
+                This report was generated automatically by the Newsletter CI pipeline.<br>
+                <a href="${{ github.server_url }}/${{ github.repository }}" style="color:#3949ab">${{ github.repository }}</a>
+              </p>
+            </td></tr>
+          </table></td></tr></table>
+          </body></html>"""
+          subject = f"{s_icon} [Run #${{ github.run_number }}] Newsletter Tests {status} — ${{ github.ref_name }}"
           msg = MIMEMultipart("alternative")
-          msg["Subject"] = f"{s_icon} [Run #{run_num}] Newsletter Tests {status}"
-          msg["From"] = f"Newsletter CI <{gmail_user}>"
-          msg["To"] = report_to
+          msg["Subject"] = subject
+          msg["From"]    = f"Newsletter CI <{gmail_user}>"
+          msg["To"]      = report_to
           msg.attach(MIMEText(html, "html"))
           with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
               server.login(gmail_user, gmail_pass)
               server.sendmail(gmail_user, report_to, msg.as_string())
+          print(f" Email sent to {report_to}")
           PYEOF
+      # 11. Slack notification — SUCCESS
       - name: Send Slack report
         if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           python3 << 'PYEOF'
-          import json, os, subprocess, sys
+          import json, os, subprocess, sys, xml.etree.ElementTree as ET
+          from glob import glob
           webhook = os.environ.get("SLACK_WEBHOOK_URL", "")
           if not webhook:
               print("No SLACK_WEBHOOK_URL set — skipping")
               sys.exit(0)
-          # High-level values
+          # ── Pull values injected by GitHub Actions ───────────────────────
           total    = "${{ steps.parse-results.outputs.total }}"    or "0"
           passed   = "${{ steps.parse-results.outputs.passed }}"   or "0"
           failed   = "${{ steps.parse-results.outputs.failed }}"   or "0"
           skipped  = "${{ steps.parse-results.outputs.skipped }}"  or "0"
           pass_pct = "${{ steps.parse-results.outputs.pass_pct }}" or "0"
-          
-          # Load rich failures from common file
-          try:
-              with open("rich_failures.json", "r") as f:
-                  failing_tests = json.load(f)
-          except:
-              failing_tests = []
+          outcome  = "${{ steps.run-tests.outcome }}"
+          is_pass  = (outcome == "success" and int(failed) == 0)
           repo     = "${{ github.repository }}"
           branch   = "${{ github.ref_name }}"
           actor    = "${{ github.actor }}"
           run_num  = "${{ github.run_number }}"
           run_url  = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          artifacts_url = f"{run_url}#artifacts"
           sha      = "${{ github.sha }}"[:7]
           commit_msg = "${{ github.event.head_commit.message }}"
           event = "${{ github.event_name }}"
@@ -314,65 +330,191 @@ jobs:
               "pull_request":       "Pull Request #${{ github.event.pull_request.number }}",
               "workflow_dispatch":  "Manual trigger",
           }.get(event, event)
-          outcome  = "${{ steps.run-tests.outcome }}"
-          is_pass  = (outcome == "success" and int(failed) == 0)
-          header_color = "#2e7d32" if is_pass else "#e01e5a"
-          status_emoji = "✅" if is_pass else "❌"
-          status_label = "PASSED" if is_pass else "FAILED"
+          # ── Parse each failing testcase from surefire XML ─────────────────
+          # Map test method names to their @DisplayName via a best-effort
+          # approach: the name attribute in the XML is the method name;
+          # we use it as the test case name since @DisplayName is not in XML.
+          failing_tests = []
+          for xml_file in sorted(glob("target/surefire-reports/TEST-*.xml")):
+              try:
+                  tree = ET.parse(xml_file)
+              except ET.ParseError:
+                  continue
+              suite_name = tree.getroot().get("name", "")
+              # Derive a friendly class name (last segment)
+              short_class = suite_name.split(".")[-1] if suite_name else "Unknown"
+              for tc in tree.findall(".//testcase"):
+                  node = tc.find("failure") or tc.find("error")
+                  if node is None:
+                      continue
+                  method   = tc.get("name", "unknown")
+                  raw_msg  = (node.get("message") or node.text or "").strip()
+                  # Trim assertion prefix noise for cleaner display
+                  disp_msg = raw_msg[:400]
+                  failing_tests.append({
+                      "class":  short_class,
+                      "method": method,
+                      "msg":    disp_msg,
+                  })
+          # ── Helper to convert a camelCase method name to a readable label ─
+          import re
+          def method_to_label(name):
+              # verifyThatHeadingReadsStayInformed → Verify That Heading Reads Stay Informed
+              spaced = re.sub(r'([A-Z])', r' \1', name).strip()
+              return spaced[0].upper() + spaced[1:] if spaced else name
+          # ── Build the test-case detail blocks (one block per failure) ─────
+          # Each failure is presented exactly like the format requested:
+          # description, steps to reproduce, expected result, actual result,
+          # impact, priority — all derived from the test name and failure msg.
+          PRIORITY_MAP = {
+              "FormValidationTest":  ("High",   "High: Form validation failures allow invalid data through, "
+                                                "which can cause downstream errors and a poor user experience."),
+              "SuccessCardTest":     ("High",   "High: Incorrect success state feedback breaks the user "
+                                                "subscription flow and reduces trust in the system."),
+              "UIRenderingTest":     ("Medium", "Medium: UI rendering mismatches affect usability and "
+                                                "brand consistency across different viewports."),
+              "NewsletterSignupTest":("High",   "High: Core signup flow failures prevent users from "
+                                                "subscribing, directly impacting product engagement."),
+          }
           failure_blocks = []
           for i, t in enumerate(failing_tests, 1):
-              block_text = (
-                  f"*Test Case {i}:* `{t['name']}`\n"
-                  f"*Class:* `{t['class']}`\n\n"
-                  f"*Description*\n{t['desc']}\n\n"
-                  f"*Steps to Reproduce*\n{t['steps']}\n\n"
-                  f"*Actual Result (Assertion)*\n```\n{t['expected'][:300]}\n```\n"
-                  f"*Impact*\n{t['impact']}\n\n"
-                  f"*Priority:* {t['priority']}\n"
-                  f"*Screenshot:* {t['screenshot']}"
+              label    = method_to_label(t["method"])
+              priority, impact = PRIORITY_MAP.get(t["class"],
+                  ("High", "High: Test failure indicates a defect that needs immediate investigation."))
+              # Derive expected / actual from the assertion message
+              # JUnit assertEquals/assertTrue messages follow predictable patterns
+              msg = t["msg"]
+              expected_line = ""
+              actual_line   = ""
+              if "expected:" in msg.lower() and "but was:" in msg.lower():
+                  parts = re.split(r'(?i)expected:\s*', msg, maxsplit=1)
+                  if len(parts) == 2:
+                      sub = re.split(r'(?i)\s*but was:\s*', parts[1], maxsplit=1)
+                      expected_line = sub[0].strip().strip("<>")
+                      actual_line   = sub[1].strip().strip("<>") if len(sub) > 1 else "See logs"
+              elif "==" in msg or "should" in msg.lower():
+                  expected_line = msg.split("==>")[0].strip() if "==>" in msg else msg[:120]
+                  actual_line   = "Differs from expected — see full logs for details"
+              else:
+                  expected_line = "See @DisplayName and assertion in test source"
+                  actual_line   = msg[:200] if msg else "See CI logs for full stack trace"
+              # Steps to reproduce are constructed generically but meaningfully
+              steps = (
+                  "1. Open a web browser and navigate to the newsletter application URL.\n"
+                  "2. Ensure the page loads fully before interacting.\n"
+                  f"3. Locate the feature under test: *{t['class'].replace('Test','')} — {label}*.\n"
+                  "4. Perform the action described by the test case.\n"
+                  "5. Observe the actual outcome and compare with the expected result below."
               )
-              failure_blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": block_text}})
+              block_text = (
+                  f"*Test Case {i}:* `{label}`\n"
+                  f"*Class:* `{t['class']}`\n\n"
+                  f"*Description*\n"
+                  f"During automated testing of the Newsletter application, the test "
+                  f"`{label}` failed. This indicates that the behaviour of the feature "
+                  f"does not match the expected specification, which may affect the "
+                  f"user experience or system correctness.\n\n"
+                  f"*Steps to Reproduce*\n{steps}\n\n"
+                  f"*Expected Result*\n• {expected_line}\n\n"
+                  f"*Actual Result*\n• {actual_line}\n\n"
+                  f"*Impact*\n{impact}\n\n"
+                  f"*Priority:* {priority}"
+              )
+              failure_blocks.append({
+                  "type": "section",
+                  "text": {"type": "mrkdwn", "text": block_text}
+              })
+              # Divider between failures
               if i < len(failing_tests):
                   failure_blocks.append({"type": "divider"})
+          # ── Assemble the full Slack payload ──────────────────────────────
+          status_emoji = "✅" if is_pass else "❌"
+          status_label = "PASSED" if is_pass else "FAILED"
+          header_color = "#2e7d32" if is_pass else "#e01e5a"
+          # Summary header block
           header_block = {
               "type": "header",
-              "text": {"type": "plain_text", "text": f"{status_emoji} Newsletter CI — {status_label}", "emoji": True}
+              "text": {
+                  "type": "plain_text",
+                  "text": f"{status_emoji}  Newsletter CI — Tests {status_label}",
+                  "emoji": True
+              }
           }
           summary_block = {
               "type": "section",
               "fields": [
-                  {"type": "mrkdwn", "text": f"*Repo*\n{repo}"},
+                  {"type": "mrkdwn", "text": f"*Repository*\n{repo}"},
                   {"type": "mrkdwn", "text": f"*Branch*\n{branch}"},
-                  {"type": "mrkdwn", "text": f"*Commit*\n`{sha}`"},
-                  {"type": "mrkdwn", "text": f"*Trigger*\n{actor} ({trigger})"},
+                  {"type": "mrkdwn", "text": f"*Triggered by*\n{actor} ({trigger})"},
+                  {"type": "mrkdwn", "text": f"*Commit*\n`{sha}` — {commit_msg[:60]}"},
+                  {"type": "mrkdwn", "text": f"*Run*\n<{run_url}|Run #{run_num}>"},
+                  {"type": "mrkdwn", "text": f"*Environment*\nubuntu-latest · Java 21 · Headless Chrome"},
               ]
           }
           stats_block = {
               "type": "section",
               "text": {
                   "type": "mrkdwn",
-                  "text": f"*Test Summary*\n✅ *{passed}* Passed  |  ❌ *{failed}* Failed  |  ⏭ *{skipped}* Skipped  |  📈 *{pass_pct}%*"
+                  "text": (
+                      f"*Test Summary*\n"
+                      f"✅ Passed: *{passed}*   "
+                      f"❌ Failed: *{failed}*   "
+                      f"⏭ Skipped: *{skipped}*   "
+                      f"📊 Total: *{total}*   "
+                      f"📈 Pass rate: *{pass_pct}%*"
+                  )
               }
           }
           blocks = [header_block, {"type": "divider"}, summary_block, stats_block]
           if failing_tests:
               blocks.append({"type": "divider"})
-              blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": f":rotating_light: *{len(failing_tests)} Detailed Failure Report(s)*"}})
+              blocks.append({
+                  "type": "section",
+                  "text": {
+                      "type": "mrkdwn",
+                      "text": f":rotating_light: *{len(failing_tests)} Failing Test Case(s) — Detailed Report*"
+                  }
+              })
               blocks.append({"type": "divider"})
               blocks.extend(failure_blocks)
           else:
-              blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": ":white_check_mark: All tests passed successfully."}})
+              blocks.append({
+                  "type": "section",
+                  "text": {
+                      "type": "mrkdwn",
+                      "text": ":white_check_mark: All tests passed. No failures to report."
+                  }
+              })
           blocks.append({"type": "divider"})
           blocks.append({
               "type": "actions",
-              "elements": [
-                  {"type": "button", "text": {"type": "plain_text", "text": "View Action Run"}, "url": run_url, "style": "primary"},
-                  {"type": "button", "text": {"type": "plain_text", "text": "Download Allure Report"}, "url": artifacts_url}
-              ]
+              "elements": [{
+                  "type": "button",
+                  "text": {"type": "plain_text", "text": "View Full Run on GitHub", "emoji": True},
+                  "url": run_url,
+                  "style": "primary"
+              }]
           })
           payload = {
               "text": f"{status_emoji} Newsletter Tests {status_label} — Run #{run_num}",
-              "attachments": [{"color": header_color, "blocks": blocks}]
+              "attachments": [{
+                  "color": header_color,
+                  "blocks": blocks
+              }]
           }
-          subprocess.run(["curl", "-s", "-X", "POST", webhook, "-H", "Content-Type: application/json", "-d", json.dumps(payload)])
+          result = subprocess.run(
+              ["curl", "-s", "-X", "POST", webhook,
+               "-H", "Content-Type: application/json",
+               "-d", json.dumps(payload)],
+              capture_output=True, text=True
+          )
+          print(result.stdout)
+          if result.returncode != 0:
+              print("STDERR:", result.stderr, file=sys.stderr)
+              sys.exit(result.returncode)
+          print(f"Slack report sent — {len(failing_tests)} failure(s) detailed.")
           PYEOF
+      # 13. Fail the build if any tests actually failed
+      - name: Fail build on test failures
+        if: steps.run-tests.outcome == 'failure'
+        run: exit 1
