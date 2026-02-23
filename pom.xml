@@ -1,74 +1,148 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <groupId>com.newsletter</groupId>
-  <artifactId>newsletter2-automation</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+    <modelVersion>4.0.0</modelVersion>
 
-  <name>newsletter2-automation</name>
-  <url>http://maven.apache.org</url>
+    <groupId>com.newsletter</groupId>
+    <artifactId>newsletter-selenium-tests</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+    <name>Newsletter Selenium Tests</name>
+    <description>Automated UI tests for the Newsletter Sign-Up form using Selenium WebDriver and JUnit 5</description>
 
-  <dependencies>
-      <dependency>
-          <groupId>org.seleniumhq.selenium</groupId>
-          <artifactId>selenium-java</artifactId>
-          <version>4.25.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.seleniumhq.selenium</groupId>
-          <artifactId>selenium-support</artifactId>
-          <version>4.40.0</version>
-          <scope>compile</scope>
-      </dependency>
-      <dependency>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter-api</artifactId>
-          <version>6.1.0-M1</version>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter-engine</artifactId>
-          <version>6.1.0-M1</version>
-          <scope>test</scope>
-      </dependency>
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-      <dependency>
-          <groupId>com.itextpdf</groupId>
-          <artifactId>itextpdf</artifactId>
-          <version>5.5.13.5</version>
-      </dependency>
+        <!-- Dependency versions -->
+        <selenium.version>4.18.1</selenium.version>
+        <junit.version>5.10.2</junit.version>
+        <webdrivermanager.version>5.7.0</webdrivermanager.version>
+        <surefire.version>3.2.5</surefire.version>
+        <allure.version>2.25.0</allure.version>
+    </properties>
 
+    <dependencies>
 
-      <dependency>
-          <groupId>com.aventstack</groupId>
-          <artifactId>extentreports</artifactId>
-          <version>5.1.1</version>
-      </dependency>
+        <!-- ── Selenium WebDriver ── -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>${selenium.version}</version>
+        </dependency>
 
-      <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-simple</artifactId>
-          <version>2.0.12</version>
-      </dependency>
+        <!-- ── WebDriverManager: auto-downloads ChromeDriver ── -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>${webdrivermanager.version}</version>
+        </dependency>
 
-      <dependency>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter</artifactId>
-          <version>5.10.2</version>
-          <scope>test</scope>
-      </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+        <!-- ── JUnit 5 ── -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ── Allure reporting ── -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-junit5</artifactId>
+            <version>${allure.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- ── Maven Surefire: runs JUnit 5 tests ── -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <configuration>
+                    <!-- Run tests in parallel by class for faster CI -->
+                    <parallel>classes</parallel>
+                    <threadCount>2</threadCount>
+                    <!-- Fail build on test failure -->
+                    <failIfNoTests>true</failIfNoTests>
+                    <!-- Detailed output in logs -->
+                    <printSummary>true</printSummary>
+                    <reportFormat>plain</reportFormat>
+                    <systemPropertyVariables>
+                        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+                        <!-- Pass base URL from CI env or use default -->
+                        <base.url>${base.url}</base.url>
+                        <!-- Headless mode for CI -->
+                        <headless>${headless}</headless>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!-- ── Compiler plugin ── -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
+
+            <!-- ── Allure Maven Plugin ── -->
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>2.12.0</version>
+                <configuration>
+                    <reportVersion>${allure.version}</reportVersion>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <!-- Default property values (overridden by CI) -->
+    <profiles>
+        <profile>
+            <id>ci</id>
+            <properties>
+                <headless>true</headless>
+                <base.url>https://bayingana.github.io/NEWSLETTER/</base.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <headless>false</headless>
+                <base.url>https://bayingana.github.io/NEWSLETTER/</base.url>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>
