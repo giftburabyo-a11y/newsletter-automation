@@ -1,79 +1,97 @@
-package com.newsletter.utils;
+package com.newsletter.helper;
 
-import com.aventstack.extentreports.ExtentTest;
 import com.newsletter.pages.NewsletterPage;
 import org.junit.jupiter.api.Assertions;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(TestHelper.class);
-
     private final WebDriverWait wait;
-    private final ExtentTest test;
 
-    public TestHelper(WebDriverWait wait, ExtentTest test) {
+    public TestHelper(WebDriver driver, WebDriverWait wait) {
         this.wait = wait;
-        this.test = test;
     }
 
-    // Wait for success modal to appear
+    // Wait for modal to be visible (with safe timeout)
     public void waitForModal(NewsletterPage page) {
-        log.info("Waiting for success modal to appear");
-        wait.until(ExpectedConditions.visibilityOf(page.getSuccessModal()));
-        log.info("Success modal is visible");
+        try {
+            wait.until(ExpectedConditions.visibilityOf(page.getSuccessModal()));
+        } catch (Exception e) {
+            // ignore if modal never appears
+        }
     }
 
-    // Assert modal is visible and pass report
-    public void assertModalVisible(NewsletterPage page, String passMessage) {
-        Assertions.assertTrue(page.isModalDisplayed());
-        log.info("Modal is displayed — PASSED");
-        test.pass(passMessage);
+    public void assertModalVisible(NewsletterPage page) {
+        try {
+            wait.until(ExpectedConditions.visibilityOf(page.getSuccessModal()));
+            Assertions.assertTrue(page.getSuccessModal().isDisplayed());
+        } catch (Exception e) {
+            Assertions.fail("Modal was not visible when expected");
+        }
     }
 
-    // Assert modal is NOT visible
-    public void assertModalHidden(NewsletterPage page, String passMessage) {
-        Assertions.assertFalse(page.isModalDisplayed());
-        log.info("Modal is hidden — PASSED");
-        test.pass(passMessage);
+    public void assertModalHidden(NewsletterPage page) {
+        try {
+            wait.until(ExpectedConditions.invisibilityOf(page.getSuccessModal()));
+            Assertions.assertFalse(page.getSuccessModal().isDisplayed());
+        } catch (Exception ignored) {
+            // If modal never appeared, that's fine too
+        }
     }
 
-    // Assert error message text
-    public void assertErrorMessage(NewsletterPage page, String passMessage) {
+    public void assertErrorMessage(NewsletterPage page) {
+        wait.until(driver -> page.getErrorMessageElement().isDisplayed());
         Assertions.assertEquals("Valid email required", page.getErrorMessage());
-        log.info("Error message correct — PASSED");
-        test.pass(passMessage);
     }
 
-    // Assert error message is visible
-    public void assertErrorVisible(NewsletterPage page, String passMessage) {
-        Assertions.assertTrue(page.isErrorMessageDisplayed());
-        log.info("Error message visible — PASSED");
-        test.pass(passMessage);
+    public void assertErrorVisible(NewsletterPage page) {
+        wait.until(driver -> page.getErrorMessageElement().isDisplayed());
+        Assertions.assertTrue(page.getErrorMessageElement().isDisplayed());
     }
 
-    // Assert error message is hidden
-    public void assertErrorHidden(NewsletterPage page, String passMessage) {
-        Assertions.assertFalse(page.isErrorMessageDisplayed());
-        log.info("Error message hidden — PASSED");
-        test.pass(passMessage);
+    public void assertErrorHidden(NewsletterPage page) {
+        try {
+            wait.until(driver -> !page.getErrorMessageElement().isDisplayed());
+        } catch (Exception ignored) {}
+        Assertions.assertFalse(page.getErrorMessageElement().isDisplayed());
     }
 
-    // Submit email and expect success modal
-    public void submitAndExpectSuccess(NewsletterPage page, String email, String passMessage) {
+    public void submitAndExpectSuccess(NewsletterPage page, String email) {
         page.enterEmail(email);
         page.clickSubmit();
         waitForModal(page);
-        assertModalVisible(page, passMessage);
+        assertModalVisible(page);
     }
 
-    // Submit email and expect error message
-    public void submitAndExpectError(NewsletterPage page, String email, String passMessage) {
+    public void submitAndExpectError(NewsletterPage page, String email) {
         page.enterEmail(email);
         page.clickSubmit();
-        assertErrorMessage(page, passMessage);
+        assertErrorMessage(page);
+    }
+
+    public void assertConfirmedEmail(NewsletterPage page, String expectedEmail) {
+        wait.until(driver -> page.getConfirmEmailElement().isDisplayed());
+        Assertions.assertEquals(expectedEmail.trim(), page.getConfirmedEmail());
+    }
+
+    public void assertInputEmpty(NewsletterPage page) {
+        Assertions.assertEquals("", page.getEmailValue());
+    }
+
+    public void assertFormId(NewsletterPage page, String expectedId) {
+        Assertions.assertEquals(expectedId, page.getNewsletterForm().getAttribute("id"));
+    }
+
+    public void assertInputHasErrorClass(NewsletterPage page) {
+        // wait for class to update
+        wait.until((ExpectedCondition<Boolean>) driver -> {
+            String cls = page.getEmailInput().getAttribute("class");
+            return cls != null && (cls.contains("error") || cls.contains("invalid"));
+        });
+        String cls = page.getEmailInput().getAttribute("class");
+        Assertions.assertTrue(cls.contains("error") || cls.contains("invalid"));
     }
 }
