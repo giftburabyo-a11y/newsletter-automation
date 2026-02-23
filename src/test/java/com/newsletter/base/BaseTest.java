@@ -2,6 +2,7 @@ package com.newsletter.base;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
+import com.newsletter.pages.NewsletterPage;
 import com.newsletter.utils.ExtentManager;
 import com.newsletter.utils.ScreenshotUtil;
 import com.newsletter.utils.TestHelper;
@@ -26,6 +27,7 @@ public class BaseTest {
     protected ExtentTest test;
     protected WebDriverWait wait;
     protected TestHelper helper;
+    protected NewsletterPage page;
 
     @BeforeEach
     public void setup(TestInfo testInfo) {
@@ -66,8 +68,8 @@ public class BaseTest {
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.manage().window().maximize();
 
-        // initialise wait and helper here so every test has access
-        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait   = new WebDriverWait(driver, Duration.ofSeconds(5));
+        page   = new NewsletterPage(driver);
         helper = new TestHelper(wait, test);
 
         log.info("Navigating to application URL");
