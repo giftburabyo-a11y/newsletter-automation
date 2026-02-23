@@ -1,6 +1,7 @@
 # CI pipeline that runs Selenium tests on every push/PR to main
 # Tests run in headless Chrome, results go to Slack + Email with failure details
 
+
 name: Selenium CI Tests
 
 on:
