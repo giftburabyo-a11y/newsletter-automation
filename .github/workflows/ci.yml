@@ -1,6 +1,6 @@
 name: Newsletter Selenium Tests
 
-# ── Triggers ────────────────────────────────────────────────────────────────
+# ── Triggers
 on:
   push:
     branches: [ master ]
@@ -8,13 +8,13 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
-# ── Permissions ──────────────────────────────────────────────────────────────
+# ── Permissions
 permissions:
   contents: read
   checks: write
   pull-requests: write
 
-# ── Jobs ─────────────────────────────────────────────────────────────────────
+# ── Jobs
 jobs:
   selenium-tests:
     name: Run Selenium Tests (JUnit 5)
